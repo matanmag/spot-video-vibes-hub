@@ -30,9 +30,9 @@ export const useVideoUpload = () => {
 
       console.log('Starting video upload:', fileName);
 
-      // Upload video file to storage
+      // Upload video file to storage - using the correct bucket name
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('videos')
+        .from('videos-public')
         .upload(fileName, file, {
           cacheControl: '3600',
           upsert: false
@@ -47,7 +47,7 @@ export const useVideoUpload = () => {
 
       // Get public URL for the uploaded video
       const { data: { publicUrl } } = supabase.storage
-        .from('videos')
+        .from('videos-public')
         .getPublicUrl(fileName);
 
       console.log('Video uploaded successfully, public URL:', publicUrl);
