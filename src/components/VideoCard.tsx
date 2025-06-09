@@ -1,6 +1,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Heart, MessageCircle, Share } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Video {
   id: string;
@@ -29,6 +31,10 @@ const VideoCard = ({ video }: VideoCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isInView, setIsInView] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -65,6 +71,79 @@ const VideoCard = ({ video }: VideoCardProps) => {
     };
   }, []);
 
+  // Fetch initial like status and count
+  useEffect(() => {
+    const fetchLikeData = async () => {
+      try {
+        // Get current user's like status
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data: userLike } = await supabase
+            .from('likes')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('video_id', video.id)
+            .maybeSingle();
+          
+          setIsLiked(!!userLike);
+        }
+
+        // Get total like count
+        const { count } = await supabase
+          .from('likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('video_id', video.id);
+
+        setLikeCount(count || 0);
+      } catch (error) {
+        console.error('Error fetching like data:', error);
+      }
+    };
+
+    fetchLikeData();
+  }, [video.id]);
+
+  const handleLike = async () => {
+    if (isLikeLoading) return;
+
+    setIsLikeLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('like_video', {
+        body: { video_id: video.id }
+      });
+
+      if (error) {
+        console.error('Error liking video:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update like. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Update UI based on response
+      setIsLiked(data.liked);
+      setLikeCount(data.totalLikes);
+      
+      toast({
+        title: data.liked ? "Liked!" : "Unliked",
+        description: data.liked ? "Added to your likes" : "Removed from your likes"
+      });
+    } catch (error) {
+      console.error('Error calling like function:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update like. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLikeLoading(false);
+    }
+  };
+
   const handleVideoClick = () => {
     if (videoRef.current) {
       if (isPlaying) {
@@ -86,6 +165,12 @@ const VideoCard = ({ video }: VideoCardProps) => {
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
     if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  };
+
+  const formatLikeCount = (count: number) => {
+    if (count < 1000) return count.toString();
+    if (count < 1000000) return `${(count / 1000).toFixed(1)}K`;
+    return `${(count / 1000000).toFixed(1)}M`;
   };
 
   return (
@@ -134,9 +219,15 @@ const VideoCard = ({ video }: VideoCardProps) => {
 
           {/* Right side - Action buttons */}
           <div className="flex flex-col gap-4">
-            <button className="flex flex-col items-center text-white hover:text-red-500 transition-colors">
-              <Heart className="h-8 w-8 mb-1" />
-              <span className="text-xs">Like</span>
+            <button 
+              onClick={handleLike}
+              disabled={isLikeLoading}
+              className="flex flex-col items-center text-white hover:text-red-500 transition-colors disabled:opacity-50"
+            >
+              <Heart 
+                className={`h-8 w-8 mb-1 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} 
+              />
+              <span className="text-xs">{formatLikeCount(likeCount)}</span>
             </button>
             <button className="flex flex-col items-center text-white hover:text-blue-500 transition-colors">
               <MessageCircle className="h-8 w-8 mb-1" />
