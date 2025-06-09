@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
+import { useSpots } from '@/hooks/useSpots';
 import { useNavigate } from 'react-router-dom';
 import { Video, Upload as UploadIcon, FileVideo } from 'lucide-react';
 
@@ -17,10 +19,22 @@ const Upload = () => {
   const [description, setDescription] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const { uploadVideo, uploading, progress } = useVideoUpload();
+  const { createDefaultSpot } = useSpots();
   const navigate = useNavigate();
+
+  // Ensure default spot exists when component mounts
+  useEffect(() => {
+    const initializeDefaultSpot = async () => {
+      if (user) {
+        console.log('Creating default spot for uploads');
+        await createDefaultSpot();
+      }
+    };
+    initializeDefaultSpot();
+  }, [user, createDefaultSpot]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -61,6 +75,16 @@ const Upload = () => {
   };
 
   const handleUpload = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to upload videos.",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+
     if (!file) {
       toast({
         title: "No file selected",
@@ -79,6 +103,7 @@ const Upload = () => {
       return;
     }
 
+    console.log('Starting video upload process');
     const result = await uploadVideo(file, title.trim(), description.trim());
     
     if (result) {
@@ -102,6 +127,14 @@ const Upload = () => {
       setPreviewUrl(null);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (

@@ -1,14 +1,8 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-
-interface VideoUploadResult {
-  videoUrl: string;
-  thumbnailUrl?: string;
-  duration?: number;
-}
+import { useAuth } from './useAuth';
+import { useToast } from './use-toast';
 
 export const useVideoUpload = () => {
   const [uploading, setUploading] = useState(false);
@@ -16,55 +10,7 @@ export const useVideoUpload = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const generateThumbnail = (videoFile: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-
-      video.onloadedmetadata = () => {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        
-        video.currentTime = 1; // Capture at 1 second
-      };
-
-      video.onseeked = () => {
-        if (ctx) {
-          ctx.drawImage(video, 0, 0);
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const thumbnailFile = new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' });
-              resolve(thumbnailFile);
-            } else {
-              reject(new Error('Failed to generate thumbnail'));
-            }
-          }, 'image/jpeg', 0.8);
-        }
-      };
-
-      video.onerror = () => reject(new Error('Failed to load video'));
-      video.src = URL.createObjectURL(videoFile);
-    });
-  };
-
-  const getVideoDuration = (videoFile: File): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const video = document.createElement('video');
-      video.onloadedmetadata = () => {
-        resolve(video.duration);
-      };
-      video.onerror = () => reject(new Error('Failed to get video duration'));
-      video.src = URL.createObjectURL(videoFile);
-    });
-  };
-
-  const uploadVideo = async (
-    videoFile: File,
-    title: string,
-    description?: string,
-    spotId?: string
-  ): Promise<VideoUploadResult | null> => {
+  const uploadVideo = async (file: File, title: string, description?: string) => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -74,116 +20,52 @@ export const useVideoUpload = () => {
       return null;
     }
 
+    setUploading(true);
+    setProgress(0);
+
     try {
-      setUploading(true);
-      setProgress(0);
-
       // Generate unique filename
-      const timestamp = Date.now();
-      const videoFileName = `${timestamp}-${videoFile.name}`;
-      const thumbnailFileName = `${timestamp}-thumbnail.jpg`;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
-      console.log('Starting video upload process...');
+      console.log('Starting video upload:', fileName);
 
-      // Upload video file
-      setProgress(25);
-      const { data: videoData, error: videoError } = await supabase.storage
-        .from('videos-public')
-        .upload(videoFileName, videoFile);
+      // Upload video file to storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('videos')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (videoError) {
-        console.error('Video upload error:', videoError);
-        throw videoError;
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
       }
-
-      console.log('Video uploaded successfully:', videoData);
-
-      // Get video URL
-      const { data: videoUrlData } = supabase.storage
-        .from('videos-public')
-        .getPublicUrl(videoFileName);
 
       setProgress(50);
 
-      // Generate and upload thumbnail
-      let thumbnailUrl: string | undefined;
-      try {
-        const thumbnailFile = await generateThumbnail(videoFile);
-        const { data: thumbnailData, error: thumbnailError } = await supabase.storage
-          .from('thumbnails-public')
-          .upload(thumbnailFileName, thumbnailFile);
+      // Get public URL for the uploaded video
+      const { data: { publicUrl } } = supabase.storage
+        .from('videos')
+        .getPublicUrl(fileName);
 
-        if (!thumbnailError && thumbnailData) {
-          const { data: thumbnailUrlData } = supabase.storage
-            .from('thumbnails-public')
-            .getPublicUrl(thumbnailFileName);
-          thumbnailUrl = thumbnailUrlData.publicUrl;
-          console.log('Thumbnail uploaded successfully:', thumbnailUrl);
-        }
-      } catch (thumbnailError) {
-        console.warn('Failed to generate thumbnail:', thumbnailError);
-        // Continue without thumbnail
-      }
+      console.log('Video uploaded successfully, public URL:', publicUrl);
 
-      setProgress(75);
-
-      // Get video duration
-      let duration: number | undefined;
-      try {
-        duration = await getVideoDuration(videoFile);
-        console.log('Video duration:', duration);
-      } catch (durationError) {
-        console.warn('Failed to get video duration:', durationError);
-      }
-
-      // Create or get default spot if none provided
-      let finalSpotId = spotId;
-      if (!finalSpotId) {
-        const { data: defaultSpot, error: spotError } = await supabase
-          .from('spots')
-          .select('id')
-          .eq('name', 'Default Location')
-          .maybeSingle();
-
-        if (spotError) {
-          console.error('Error fetching default spot:', spotError);
-        }
-
-        if (!defaultSpot) {
-          // Create default spot
-          const { data: newSpot, error: createSpotError } = await supabase
-            .from('spots')
-            .insert({
-              name: 'Default Location',
-              description: 'Default filming location',
-              latitude: 40.7128,
-              longitude: -74.0060
-            })
-            .select('id')
-            .single();
-
-          if (createSpotError) {
-            console.error('Error creating default spot:', createSpotError);
-            throw createSpotError;
-          }
-
-          finalSpotId = newSpot.id;
-        } else {
-          finalSpotId = defaultSpot.id;
-        }
-      }
+      // For now, we'll use a default spot_id. In a real app, this would be selected by the user
+      const defaultSpotId = '123e4567-e89b-12d3-a456-426614174000'; // This would need to exist in the spots table
 
       // Save video metadata to database
-      const { data: videoRecord, error: dbError } = await supabase
+      const { data: videoData, error: dbError } = await supabase
         .from('videos')
         .insert({
           user_id: user.id,
-          spot_id: finalSpotId,
           title,
-          description,
-          video_url: videoUrlData.publicUrl,
-          thumbnail_url: thumbnailUrl,
-          duration: duration ? Math.round(duration) : null
+          description: description || '',
+          video_url: publicUrl,
+          spot_id: defaultSpotId, // This should be selected by user in a real app
+          duration: null, // Could be calculated from the video file
+          thumbnail_url: null // Could be generated from the video
         })
         .select()
         .single();
@@ -195,24 +77,19 @@ export const useVideoUpload = () => {
 
       setProgress(100);
 
-      console.log('Video upload completed successfully:', videoRecord);
-
       toast({
-        title: "Upload successful!",
-        description: `${title} has been uploaded successfully.`,
+        title: "Video uploaded successfully!",
+        description: "Your video has been uploaded and is now available.",
       });
 
-      return {
-        videoUrl: videoUrlData.publicUrl,
-        thumbnailUrl,
-        duration
-      };
+      console.log('Video metadata saved:', videoData);
+      return videoData;
 
-    } catch (error) {
-      console.error('Upload error:', error);
+    } catch (error: any) {
+      console.error('Error uploading video:', error);
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload video",
+        description: error.message || "Failed to upload video. Please try again.",
         variant: "destructive",
       });
       return null;
