@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -107,7 +106,7 @@ const Home = () => {
   }
 
   return (
-    <div className="relative h-screen overflow-hidden bg-black">
+    <div className="relative h-screen overflow-hidden bg-black pb-16">
       {/* Floating Search Bar */}
       <div className="absolute top-16 left-4 right-4 z-50">
         <div className="relative max-w-md mx-auto">
