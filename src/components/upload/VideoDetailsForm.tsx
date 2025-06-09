@@ -21,31 +21,25 @@ export const VideoDetailsForm = ({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="title" className="text-white font-medium">
-          Title *
-        </Label>
+        <Label htmlFor="title">Title *</Label>
         <Input
           id="title"
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
           placeholder="Enter video title"
           disabled={disabled}
-          className="bg-[#283339] border-[#3b4b54] text-white placeholder:text-[#9cafba] focus:border-white rounded-xl"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description" className="text-white font-medium">
-          Description
-        </Label>
+        <Label htmlFor="description">Description</Label>
         <Textarea
           id="description"
           value={description}
           onChange={(e) => onDescriptionChange(e.target.value)}
-          placeholder="Tell us about your surf session..."
+          placeholder="Enter video description (optional)"
           rows={3}
           disabled={disabled}
-          className="bg-[#283339] border-[#3b4b54] text-white placeholder:text-[#9cafba] focus:border-white rounded-xl resize-none"
         />
       </div>
     </div>
