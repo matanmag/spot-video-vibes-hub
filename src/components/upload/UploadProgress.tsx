@@ -9,10 +9,13 @@ export const UploadProgress = ({ progress }: UploadProgressProps) => {
   return (
     <div className="space-y-2">
       <div className="flex justify-between text-sm">
-        <span>Uploading...</span>
-        <span>{progress}%</span>
+        <span className="text-white font-medium">Uploading...</span>
+        <span className="text-[#9cafba]">{progress}%</span>
       </div>
-      <Progress value={progress} className="w-full" />
+      <Progress 
+        value={progress} 
+        className="w-full h-2 bg-[#283339]" 
+      />
     </div>
   );
 };

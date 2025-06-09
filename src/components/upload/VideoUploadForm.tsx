@@ -1,13 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useVideoUpload } from '@/hooks/useVideoUpload';
 import { useSpots } from '@/hooks/useSpots';
 import { useNavigate } from 'react-router-dom';
-import { UploadIcon } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { FileDropzone } from './FileDropzone';
 import { VideoPreview } from './VideoPreview';
 import { VideoDetailsForm } from './VideoDetailsForm';
@@ -116,43 +115,46 @@ export const VideoUploadForm = () => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <UploadIcon className="h-5 w-5" />
-          Video Upload
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <FileDropzone onFileChange={handleFileChange} disabled={uploading} />
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-[#1b2327] rounded-xl border border-[#283339] overflow-hidden">
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Upload className="h-6 w-6 text-white" />
+            <h3 className="text-white text-xl font-bold">Share Your Surf Session</h3>
+          </div>
 
-        {file && previewUrl && (
-          <VideoPreview 
-            file={file}
-            previewUrl={previewUrl}
-            onRemove={resetForm}
-          />
-        )}
+          <div className="space-y-6">
+            <FileDropzone onFileChange={handleFileChange} disabled={uploading} />
 
-        <VideoDetailsForm
-          title={title}
-          description={description}
-          onTitleChange={setTitle}
-          onDescriptionChange={setDescription}
-          disabled={uploading}
-        />
+            {file && previewUrl && (
+              <VideoPreview 
+                file={file}
+                previewUrl={previewUrl}
+                onRemove={resetForm}
+              />
+            )}
 
-        {uploading && <UploadProgress progress={progress} />}
+            <VideoDetailsForm
+              title={title}
+              description={description}
+              onTitleChange={setTitle}
+              onDescriptionChange={setDescription}
+              disabled={uploading}
+            />
 
-        <Button 
-          onClick={handleUpload} 
-          disabled={!file || !title.trim() || uploading}
-          className="w-full"
-          size="lg"
-        >
-          {uploading ? "Uploading..." : "Upload Video"}
-        </Button>
-      </CardContent>
-    </Card>
+            {uploading && <UploadProgress progress={progress} />}
+
+            <Button 
+              onClick={handleUpload} 
+              disabled={!file || !title.trim() || uploading}
+              className="w-full bg-white text-[#111618] hover:bg-gray-200 font-bold py-3 rounded-xl text-base"
+              size="lg"
+            >
+              {uploading ? "Uploading..." : "Share Video"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
