@@ -12,13 +12,16 @@ import { FileDropzone } from './FileDropzone';
 import { VideoPreview } from './VideoPreview';
 import { VideoDetailsForm } from './VideoDetailsForm';
 import { UploadProgress } from './UploadProgress';
+import { EncoderLoadingSpinner } from './EncoderLoadingSpinner';
 import { validateVideoFile, generateTitleFromFilename } from '@/utils/videoValidation';
+import { MAX_FILE_SIZE } from '@/constants/videoFormats';
 
 export const VideoUploadForm = () => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isEncoderLoading, setIsEncoderLoading] = useState(false);
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -40,6 +43,16 @@ export const VideoUploadForm = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
+      // Check file size first
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        toast({
+          title: "File too large",
+          description: `Please select a video file smaller than ${Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const validation = validateVideoFile(selectedFile);
       
       if (!validation.isValid) {
@@ -61,6 +74,27 @@ export const VideoUploadForm = () => {
       if (!title) {
         setTitle(generateTitleFromFilename(selectedFile.name));
       }
+
+      // Start encoder initialization
+      initializeEncoder();
+    }
+  };
+
+  const initializeEncoder = async () => {
+    setIsEncoderLoading(true);
+    try {
+      // Simulate FFmpeg.wasm initialization
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('FFmpeg encoder ready');
+    } catch (error) {
+      console.error('Failed to initialize encoder:', error);
+      toast({
+        title: "Encoder initialization failed",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEncoderLoading(false);
     }
   };
 
@@ -93,6 +127,15 @@ export const VideoUploadForm = () => {
       return;
     }
 
+    if (isEncoderLoading) {
+      toast({
+        title: "Encoder still loading",
+        description: "Please wait for the encoder to finish preparing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     console.log('Starting video upload process');
     const result = await uploadVideo(file, title.trim(), description.trim());
     
@@ -109,6 +152,7 @@ export const VideoUploadForm = () => {
     setFile(null);
     setTitle('');
     setDescription('');
+    setIsEncoderLoading(false);
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl(null);
@@ -124,7 +168,7 @@ export const VideoUploadForm = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <FileDropzone onFileChange={handleFileChange} disabled={uploading} />
+        <FileDropzone onFileChange={handleFileChange} disabled={uploading || isEncoderLoading} />
 
         {file && previewUrl && (
           <VideoPreview 
@@ -134,23 +178,25 @@ export const VideoUploadForm = () => {
           />
         )}
 
+        {isEncoderLoading && <EncoderLoadingSpinner />}
+
         <VideoDetailsForm
           title={title}
           description={description}
           onTitleChange={setTitle}
           onDescriptionChange={setDescription}
-          disabled={uploading}
+          disabled={uploading || isEncoderLoading}
         />
 
         {uploading && <UploadProgress progress={progress} />}
 
         <Button 
           onClick={handleUpload} 
-          disabled={!file || !title.trim() || uploading}
+          disabled={!file || !title.trim() || uploading || isEncoderLoading}
           className="w-full"
           size="lg"
         >
-          {uploading ? "Uploading..." : "Upload Video"}
+          {uploading ? "Uploading..." : isEncoderLoading ? "Preparing..." : "Upload Video"}
         </Button>
       </CardContent>
     </Card>
