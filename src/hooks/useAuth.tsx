@@ -40,21 +40,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signInWithEmail = async (email: string) => {
-    // Use the correct Lovable preview URL format for the redirect
-    const redirectUrl = 'https://ab35a25c-20b3-4577-a064-dba1aab459cf.lovableproject.com/home';
-    
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: redirectUrl
+    try {
+      // Use dynamic redirect URL based on current environment
+      const redirectUrl = `${window.location.origin}/home`;
+      console.log('Signing in with redirect URL:', redirectUrl);
+      
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: redirectUrl
+        }
+      });
+      
+      if (error) {
+        console.error('Sign in error:', error);
       }
-    });
-    
-    return { error };
+      
+      return { error };
+    } catch (error) {
+      console.error('Unexpected error during sign in:', error);
+      return { error };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   const value = {
