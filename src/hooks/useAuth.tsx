@@ -40,8 +40,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signInWithEmail = async (email: string) => {
-    // Use your Lovable preview URL for the redirect
-    const redirectUrl = 'https://lovable.dev/projects/ab35a25c-20b3-4577-a064-dba1aab459cf/home';
+    // Use the correct Lovable preview URL format for the redirect
+    const redirectUrl = 'https://ab35a25c-20b3-4577-a064-dba1aab459cf.lovableproject.com/home';
     
     const { error } = await supabase.auth.signInWithOtp({
       email,
