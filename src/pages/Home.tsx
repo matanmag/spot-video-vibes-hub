@@ -1,12 +1,15 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
 import VideoCard from '@/components/VideoCard';
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -18,7 +21,7 @@ const Home = () => {
     isLoading,
     error
   } = useInfiniteQuery({
-    queryKey: ['videos', searchQuery],
+    queryKey: ['videos'],
     queryFn: async ({ pageParam }) => {
       console.log('Fetching videos with pageParam:', pageParam);
       
@@ -40,10 +43,6 @@ const Home = () => {
 
       if (pageParam) {
         query = query.lt('created_at', pageParam);
-      }
-
-      if (searchQuery.trim()) {
-        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
       }
 
       const { data, error } = await query;
@@ -87,6 +86,12 @@ const Home = () => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   const allVideos = data?.pages.flatMap(page => page) || [];
 
   if (isLoading) {
@@ -116,6 +121,7 @@ const Home = () => {
             placeholder="Search videos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={handleSearchKeyPress}
             className="pl-10 bg-background/80 backdrop-blur-sm border-border/50"
           />
         </div>
