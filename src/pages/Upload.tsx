@@ -25,6 +25,17 @@ const Upload = () => {
   const { createDefaultSpot } = useSpots();
   const navigate = useNavigate();
 
+  // Supported video formats
+  const supportedFormats = ['.mp4', '.mov', '.quicktime', '.avi', '.webm', '.ogg'];
+  const acceptedMimeTypes = [
+    'video/mp4',
+    'video/quicktime',
+    'video/avi',
+    'video/mov',
+    'video/webm',
+    'video/ogg'
+  ];
+
   // Ensure default spot exists when component mounts
   useEffect(() => {
     const initializeDefaultSpot = async () => {
@@ -40,10 +51,13 @@ const Upload = () => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       // Validate file type
-      if (!selectedFile.type.startsWith('video/')) {
+      const isValidType = acceptedMimeTypes.includes(selectedFile.type) || 
+        supportedFormats.some(format => selectedFile.name.toLowerCase().endsWith(format));
+      
+      if (!isValidType) {
         toast({
           title: "Invalid file type",
-          description: "Please select a video file.",
+          description: `Please select a video file. Supported formats: ${supportedFormats.join(', ')}`,
           variant: "destructive",
         });
         return;
@@ -187,13 +201,13 @@ const Upload = () => {
                         <span className="font-semibold">Click to upload</span> or drag and drop
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        MP4 files up to 200MB
+                        Supported formats: MP4, MOV, AVI, WebM, OGG (up to 200MB)
                       </p>
                     </div>
                     <Input
                       id="video-file"
                       type="file"
-                      accept="video/*"
+                      accept={acceptedMimeTypes.join(',')}
                       onChange={handleFileChange}
                       className="hidden"
                     />
