@@ -4,6 +4,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import VideoCard from '@/components/VideoCard';
 import SearchBar from '@/components/SearchBar';
+import BottomTabBar from '@/components/BottomTabBar';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
 
 const Home = () => {
@@ -114,16 +115,16 @@ const Home = () => {
   }
 
   return (
-    <div className="relative h-screen bg-black">
-      {/* Search Bar */}
-      <div className="absolute top-4 left-4 right-4 z-50">
+    <>
+      {/* Search Bar Overlay */}
+      <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-3 pb-2 bg-[#111618]/70 backdrop-blur">
         <SearchBar autoFocus={false} />
       </div>
 
       {/* Video Feed */}
       <div
         id="feed"
-        className="h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth overscroll-contain pb-16"
+        className="h-screen pt-[64px] overflow-y-scroll snap-y snap-mandatory scroll-smooth overscroll-contain"
       >
         {allVideos.length === 0 ? (
           <div className="h-screen flex items-center justify-center snap-start">
@@ -152,7 +153,9 @@ const Home = () => {
           )}
         </div>
       </div>
-    </div>
+
+      <BottomTabBar />
+    </>
   );
 };
 
