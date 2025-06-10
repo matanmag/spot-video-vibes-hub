@@ -13,20 +13,25 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   useEffect(() => {
     if (!loading && !user) {
+      console.log('User not authenticated, redirecting to login');
       navigate('/login');
     }
   }, [user, loading, navigate]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-lg">Checking authentication...</div>
       </div>
     );
   }
 
   if (!user) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-lg">Redirecting to login...</div>
+      </div>
+    );
   }
 
   return <>{children}</>;

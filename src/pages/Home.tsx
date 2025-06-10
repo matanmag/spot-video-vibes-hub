@@ -31,9 +31,18 @@ const Home = () => {
   }
 
   if (error) {
+    console.error('Home page error:', error);
     return (
       <div className="h-screen flex items-center justify-center bg-black">
-        <div className="text-red-500 text-lg">Error loading videos</div>
+        <div className="text-center">
+          <div className="text-red-500 text-lg mb-4">Error loading videos</div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="text-white underline"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     );
   }
