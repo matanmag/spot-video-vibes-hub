@@ -10,6 +10,50 @@ export const useVideoUpload = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  const generatePreview = async (file: File): Promise<{ previewBlob: Blob; thumbnailBlob: Blob }> => {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      video.onloadedmetadata = () => {
+        // Set canvas dimensions for 720p
+        const aspectRatio = video.videoWidth / video.videoHeight;
+        canvas.height = 720;
+        canvas.width = Math.round(720 * aspectRatio);
+
+        // Generate thumbnail at 1 second
+        video.currentTime = 1;
+      };
+
+      video.onseeked = () => {
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'));
+          return;
+        }
+
+        // Draw frame for thumbnail
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((thumbnailBlob) => {
+          if (!thumbnailBlob) {
+            reject(new Error('Could not generate thumbnail'));
+            return;
+          }
+
+          // For now, we'll use the original file as preview since FFmpeg.wasm would add significant complexity
+          // In a production environment, you'd want to use FFmpeg.wasm or server-side processing
+          resolve({
+            previewBlob: file, // Using original file for now
+            thumbnailBlob
+          });
+        }, 'image/jpeg', 0.8);
+      };
+
+      video.onerror = () => reject(new Error('Could not load video'));
+      video.src = URL.createObjectURL(file);
+    });
+  };
+
   const uploadVideo = async (file: File, title: string, description?: string, spotId?: string) => {
     if (!user) {
       toast({
@@ -24,33 +68,84 @@ export const useVideoUpload = () => {
     setProgress(0);
 
     try {
-      // Generate unique filename
+      console.log('Starting video upload process:', title);
+
+      // Generate preview and thumbnail
+      setProgress(10);
+      const { previewBlob, thumbnailBlob } = await generatePreview(file);
+      
+      setProgress(20);
+
+      // Generate unique filenames
+      const timestamp = Date.now();
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      const baseFileName = `${user.id}/${timestamp}`;
+      
+      const originalFileName = `${baseFileName}.${fileExt}`;
+      const previewFileName = `previews/${baseFileName}.mp4`;
+      const thumbnailFileName = `thumbnails/${baseFileName}.jpg`;
 
-      console.log('Starting video upload:', fileName);
+      console.log('Uploading files:', { originalFileName, previewFileName, thumbnailFileName });
 
-      // Upload video file to storage - using the correct bucket name
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      // Upload original video
+      const { data: originalUpload, error: originalError } = await supabase.storage
         .from('videos-public')
-        .upload(fileName, file, {
+        .upload(originalFileName, file, {
           cacheControl: '3600',
           upsert: false
         });
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
+      if (originalError) {
+        console.error('Original video upload error:', originalError);
+        throw originalError;
       }
 
-      setProgress(50);
+      setProgress(40);
 
-      // Get public URL for the uploaded video
-      const { data: { publicUrl } } = supabase.storage
+      // Upload preview video (for now, same as original)
+      const { data: previewUpload, error: previewError } = await supabase.storage
         .from('videos-public')
-        .getPublicUrl(fileName);
+        .upload(previewFileName, previewBlob, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      console.log('Video uploaded successfully, public URL:', publicUrl);
+      if (previewError) {
+        console.error('Preview video upload error:', previewError);
+        throw previewError;
+      }
+
+      setProgress(60);
+
+      // Upload thumbnail
+      const { data: thumbnailUpload, error: thumbnailError } = await supabase.storage
+        .from('videos-public')
+        .upload(thumbnailFileName, thumbnailBlob, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (thumbnailError) {
+        console.error('Thumbnail upload error:', thumbnailError);
+        throw thumbnailError;
+      }
+
+      setProgress(80);
+
+      // Get public URLs
+      const { data: { publicUrl: originalUrl } } = supabase.storage
+        .from('videos-public')
+        .getPublicUrl(originalFileName);
+
+      const { data: { publicUrl: optimizedUrl } } = supabase.storage
+        .from('videos-public')
+        .getPublicUrl(previewFileName);
+
+      const { data: { publicUrl: thumbnailUrl } } = supabase.storage
+        .from('videos-public')
+        .getPublicUrl(thumbnailFileName);
+
+      console.log('Files uploaded successfully:', { originalUrl, optimizedUrl, thumbnailUrl });
 
       // Use provided spotId or default spot
       const finalSpotId = spotId || '123e4567-e89b-12d3-a456-426614174000';
@@ -62,10 +157,11 @@ export const useVideoUpload = () => {
           user_id: user.id,
           title,
           description: description || '',
-          video_url: publicUrl,
+          video_url: originalUrl,
+          optimized_url: optimizedUrl,
+          thumbnail_url: thumbnailUrl,
           spot_id: finalSpotId,
-          duration: null, // Could be calculated from the video file
-          thumbnail_url: null // Could be generated from the video
+          duration: null,
         })
         .select()
         .single();
