@@ -224,6 +224,10 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
+      increment_video_views: {
+        Args: { video_id: string }
+        Returns: undefined
+      }
       search_spots: {
         Args: { q: string }
         Returns: {

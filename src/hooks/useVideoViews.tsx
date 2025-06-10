@@ -24,10 +24,11 @@ export const useVideoViews = (videoId: string) => {
       if (!error) {
         setHasTrackedView(true);
         
-        // Update the video views count
-        const { error: updateError } = await supabase.rpc('increment_video_views', {
-          video_id: videoId
-        });
+        // Update the video views count using the database function
+        const { error: updateError } = await supabase
+          .rpc('increment_video_views', {
+            video_id: videoId
+          });
 
         if (updateError) {
           console.error('Error updating video views count:', updateError);
