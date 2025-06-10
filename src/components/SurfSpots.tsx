@@ -1,11 +1,23 @@
+
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from '@/lib/supabase';
-import type { SurfSpot } from '@/types/surf-spot';
+import { supabase } from '@/integrations/supabase/client';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+
+// Interface for spots from database
+interface Spot {
+  id: string;
+  name: string;
+  country?: string;
+  latitude: number;
+  longitude: number;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
 
 // Fix for default marker icons in Leaflet with Next.js
 const icon = L.icon({
@@ -19,7 +31,7 @@ const icon = L.icon({
 });
 
 export function SurfSpots() {
-    const [spots, setSpots] = useState<SurfSpot[]>([]);
+    const [spots, setSpots] = useState<Spot[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -29,22 +41,29 @@ export function SurfSpots() {
 
     const fetchSurfSpots = async () => {
         try {
+            console.log('Fetching surf spots...');
             const { data, error } = await supabase
-                .from('surf_spots')
+                .from('spots')
                 .select('*')
                 .order('name');
 
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase error:', error);
+                throw error;
+            }
+            
+            console.log('Fetched spots:', data);
             setSpots(data || []);
         } catch (err) {
+            console.error('Error fetching spots:', err);
             setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) return <div>Loading surf spots...</div>;
-    if (error) return <div>Error: {error}</div>;
+    if (loading) return <div className="flex items-center justify-center p-8">Loading surf spots...</div>;
+    if (error) return <div className="flex items-center justify-center p-8 text-destructive">Error: {error}</div>;
 
     return (
         <div className="container mx-auto p-4">
@@ -71,10 +90,10 @@ export function SurfSpots() {
                                 <Popup>
                                     <div>
                                         <h3 className="font-bold">{spot.name}</h3>
-                                        <p>{spot.location}, {spot.country}</p>
-                                        <Badge variant="secondary" className="mt-1">
-                                            {spot.difficulty_level}
-                                        </Badge>
+                                        <p>{spot.country || 'Unknown location'}</p>
+                                        {spot.description && (
+                                            <p className="text-sm mt-1">{spot.description}</p>
+                                        )}
                                     </div>
                                 </Popup>
                             </Marker>
@@ -84,42 +103,38 @@ export function SurfSpots() {
 
                 {/* List View */}
                 <div className="space-y-4">
-                    {spots.map((spot) => (
-                        <Card key={spot.id}>
-                            <CardHeader>
-                                <CardTitle>{spot.name}</CardTitle>
-                                <CardDescription>
-                                    {spot.location}, {spot.country}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-2">
-                                    <div className="flex gap-2">
-                                        <Badge variant="secondary">
-                                            {spot.difficulty_level}
-                                        </Badge>
-                                        {spot.wave_type && (
-                                            <Badge variant="outline">
-                                                {spot.wave_type}
-                                            </Badge>
-                                        )}
-                                    </div>
-                                    {spot.description && (
-                                        <p className="text-sm text-gray-600">
-                                            {spot.description}
-                                        </p>
-                                    )}
-                                    {spot.best_season && (
-                                        <p className="text-sm text-gray-600">
-                                            Best season: {spot.best_season}
-                                        </p>
-                                    )}
-                                </div>
+                    {spots.length === 0 ? (
+                        <Card>
+                            <CardContent className="flex items-center justify-center p-8">
+                                <p className="text-muted-foreground">No surf spots found. Add some spots to see them here!</p>
                             </CardContent>
                         </Card>
-                    ))}
+                    ) : (
+                        spots.map((spot) => (
+                            <Card key={spot.id}>
+                                <CardHeader>
+                                    <CardTitle>{spot.name}</CardTitle>
+                                    <CardDescription>
+                                        {spot.country || 'Unknown location'}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="space-y-2">
+                                        {spot.description && (
+                                            <p className="text-sm text-muted-foreground">
+                                                {spot.description}
+                                            </p>
+                                        )}
+                                        <p className="text-xs text-muted-foreground">
+                                            Coordinates: {spot.latitude.toFixed(4)}, {spot.longitude.toFixed(4)}
+                                        </p>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))
+                    )}
                 </div>
             </div>
         </div>
     );
-} 
+}

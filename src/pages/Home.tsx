@@ -97,24 +97,33 @@ const Home = () => {
 
   const allVideos = data?.pages.flatMap(page => page) || [];
 
+  console.log('Current state:', { 
+    isLoading, 
+    locationLoading, 
+    error, 
+    videosCount: allVideos.length,
+    selectedSpotId 
+  });
+
   if (isLoading || locationLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-black">
-        <div className="text-white text-lg">Loading videos...</div>
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-foreground text-lg">Loading videos...</div>
       </div>
     );
   }
 
   if (error) {
+    console.error('Home page error:', error);
     return (
-      <div className="h-screen flex items-center justify-center bg-black">
-        <div className="text-red-500 text-lg">Error loading videos</div>
+      <div className="h-screen flex items-center justify-center bg-background">
+        <div className="text-destructive text-lg">Error loading videos: {error.message}</div>
       </div>
     );
   }
 
   return (
-    <div className="relative bg-black">
+    <div className="relative bg-background">
       {/* Search Bar Overlay */}
       <SearchBar
         selectedSpotId={selectedSpotId}
@@ -125,7 +134,7 @@ const Home = () => {
       <div className="snap-container scrollbar-hide">
         {allVideos.length === 0 ? (
           <div className="snap-item flex items-center justify-center">
-            <div className="text-center text-white/60">
+            <div className="text-center text-muted-foreground">
               <p className="text-lg mb-2">No videos found</p>
               {selectedSpotId ? (
                 <p className="text-sm">Try selecting a different location or browse all locations</p>
@@ -145,7 +154,7 @@ const Home = () => {
         {/* Load more trigger */}
         <div ref={loadMoreRef} className="snap-item flex items-center justify-center">
           {isFetchingNextPage && (
-            <div className="text-white text-sm">Loading more videos...</div>
+            <div className="text-foreground text-sm">Loading more videos...</div>
           )}
         </div>
       </div>
