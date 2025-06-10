@@ -79,12 +79,24 @@ export const uploadVideoFiles = async (
 
     console.log('Generated URLs:', { originalUrl, optimizedUrl, thumbnailUrl });
 
-    // Verify URLs are accessible
+    // Verify URLs are accessible with detailed logging
     try {
-      const testResponse = await fetch(originalUrl, { method: 'HEAD' });
-      console.log('Original URL test:', testResponse.status, testResponse.ok);
+      console.log('Testing original URL accessibility...');
+      const originalTest = await fetch(originalUrl, { method: 'HEAD' });
+      console.log(`Original URL test: ${originalTest.status} ${originalTest.statusText}`);
+      console.log('Original URL headers:', Object.fromEntries(originalTest.headers.entries()));
+
+      console.log('Testing optimized URL accessibility...');
+      const optimizedTest = await fetch(optimizedUrl, { method: 'HEAD' });
+      console.log(`Optimized URL test: ${optimizedTest.status} ${optimizedTest.statusText}`);
+      console.log('Optimized URL headers:', Object.fromEntries(optimizedTest.headers.entries()));
+
+      console.log('Testing thumbnail URL accessibility...');
+      const thumbnailTest = await fetch(thumbnailUrl, { method: 'HEAD' });
+      console.log(`Thumbnail URL test: ${thumbnailTest.status} ${thumbnailTest.statusText}`);
+      console.log('Thumbnail URL headers:', Object.fromEntries(thumbnailTest.headers.entries()));
     } catch (error) {
-      console.error('Error testing original URL:', error);
+      console.error('Error testing URLs:', error);
     }
 
     return { originalUrl, optimizedUrl, thumbnailUrl };
