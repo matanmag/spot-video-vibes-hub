@@ -1,133 +1,26 @@
 
-import { useEffect, useRef, useState } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { useNavigate } from 'react-router-dom';
-import VideoCard from '@/components/VideoCard';
-import LocationSearch from '@/components/LocationSearch';
-import { useLocationPreference } from '@/hooks/useLocationPreference';
-import { useVideoPreloader } from '@/hooks/useVideoPreloader';
-import { useNetworkQuality } from '@/hooks/useNetworkQuality';
+import HomeHeader from '@/components/HomeHeader';
+import VideoFeed from '@/components/VideoFeed';
+import EmptyState from '@/components/EmptyState';
+import { useHomeLogic } from '@/hooks/useHomeLogic';
 
 const Home = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const navigate = useNavigate();
-  const observerRef = useRef<IntersectionObserver>();
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const { selectedSpotId, updateLocationPreference, loading: locationLoading } = useLocationPreference();
-  const { optimalQuality } = useNetworkQuality();
-
   const {
-    data,
+    searchQuery,
+    setSearchQuery,
+    selectedSpotId,
+    updateLocationPreference,
+    optimalQuality,
+    allVideos,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isLoading,
     error,
-    refetch
-  } = useInfiniteQuery({
-    queryKey: ['videos', selectedSpotId],
-    queryFn: async ({ pageParam }) => {
-      console.log('Fetching videos with pageParam:', pageParam, 'spotId:', selectedSpotId);
-      
-      let query = supabase
-        .from('videos')
-        .select(`
-          *,
-          spots (
-            name,
-            latitude,
-            longitude
-          ),
-          profiles (
-            email
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (selectedSpotId) {
-        query = query.eq('spot_id', selectedSpotId);
-      }
-
-      if (pageParam) {
-        query = query.lt('created_at', pageParam);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Error fetching videos:', error);
-        throw error;
-      }
-
-      return data || [];
-    },
-    getNextPageParam: (lastPage) => {
-      if (lastPage.length < 10) return undefined;
-      return lastPage[lastPage.length - 1]?.created_at;
-    },
-    initialPageParam: undefined,
-  });
-
-  const allVideos = data?.pages.flatMap(page => page) || [];
-
-  // Preload videos based on current position
-  useVideoPreloader(allVideos, currentVideoIndex, optimalQuality);
-
-  // Track current video index based on scroll position
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      const videoHeight = window.innerHeight;
-      const newIndex = Math.round(scrollPosition / videoHeight);
-      
-      if (newIndex !== currentVideoIndex && newIndex < allVideos.length) {
-        setCurrentVideoIndex(newIndex);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [currentVideoIndex, allVideos.length]);
-
-  // Refetch when location changes
-  useEffect(() => {
-    refetch();
-  }, [selectedSpotId, refetch]);
-
-  // Set up intersection observer for infinite scroll
-  useEffect(() => {
-    if (observerRef.current) observerRef.current.disconnect();
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observerRef.current.observe(loadMoreRef.current);
-    }
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
+    locationLoading,
+    handleSearchKeyPress,
+    handleCurrentVideoIndexChange
+  } = useHomeLogic();
 
   if (isLoading || locationLoading) {
     return (
@@ -147,64 +40,26 @@ const Home = () => {
 
   return (
     <div className="relative h-screen overflow-hidden bg-black pb-16">
-      {/* Top Bar with Search and Location */}
-      <div className="absolute top-4 left-4 right-4 z-50">
-        <div className="flex items-center justify-between mb-4">
-          <LocationSearch
-            selectedSpotId={selectedSpotId}
-            onLocationSelect={updateLocationPreference}
-            placeholder="Search surf spots..."
-            className="flex-1 max-w-xs"
-          />
-          
-          {/* Network quality indicator */}
-          <div className="text-xs text-white/60 bg-black/50 px-2 py-1 rounded">
-            {optimalQuality}
-          </div>
-        </div>
-        
-        <div className="relative max-w-md mx-auto">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            type="text"
-            placeholder="Search videos..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={handleSearchKeyPress}
-            className="pl-10 bg-background/80 backdrop-blur-sm border-border/50"
-          />
-        </div>
-      </div>
+      <HomeHeader
+        selectedSpotId={selectedSpotId}
+        onLocationSelect={updateLocationPreference}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
+        onSearchKeyPress={handleSearchKeyPress}
+        optimalQuality={optimalQuality}
+      />
 
-      {/* Video Feed */}
-      <div className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide pt-24">
-        {allVideos.length === 0 ? (
-          <div className="h-full flex items-center justify-center">
-            <div className="text-center text-white/60">
-              <p className="text-lg mb-2">No videos found</p>
-              {selectedSpotId ? (
-                <p className="text-sm">Try selecting a different location or browse all locations</p>
-              ) : (
-                <p className="text-sm">Be the first to upload a video!</p>
-              )}
-            </div>
-          </div>
-        ) : (
-          allVideos.map((video, index) => (
-            <VideoCard
-              key={`${video.id}-${index}`}
-              video={video}
-            />
-          ))
-        )}
-        
-        {/* Load more trigger */}
-        <div ref={loadMoreRef} className="h-20 flex items-center justify-center">
-          {isFetchingNextPage && (
-            <div className="text-white text-sm">Loading more videos...</div>
-          )}
-        </div>
-      </div>
+      {allVideos.length === 0 ? (
+        <EmptyState selectedSpotId={selectedSpotId} />
+      ) : (
+        <VideoFeed
+          videos={allVideos}
+          onCurrentVideoIndexChange={handleCurrentVideoIndexChange}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onFetchNextPage={fetchNextPage}
+        />
+      )}
     </div>
   );
 };
