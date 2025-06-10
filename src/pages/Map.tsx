@@ -1,5 +1,5 @@
-
 import { MapPin } from 'lucide-react';
+import { SurfSpots } from '@/components/SurfSpots';
 
 const Map = () => {
   return (
@@ -7,15 +7,10 @@ const Map = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">
           <MapPin className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">Map</h1>
+          <h1 className="text-3xl font-bold">Surf Spots Map</h1>
         </div>
         
-        <div className="flex items-center justify-center h-96 bg-muted rounded-lg">
-          <div className="text-center">
-            <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">Map functionality coming soon</p>
-          </div>
-        </div>
+        <SurfSpots />
       </div>
     </div>
   );
