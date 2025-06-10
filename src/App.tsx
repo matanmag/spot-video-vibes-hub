@@ -13,6 +13,8 @@ const DebugLocation = () => {
     search: location.search,
     hash: location.hash
   });
+  console.log('🔍 Exact pathname for matching:', `"${location.pathname}"`);
+  console.log('🔍 Pathname length:', location.pathname.length);
   return null;
 };
 
@@ -41,7 +43,17 @@ const App = () => {
                 </SafeTestWrapper>
               } 
             />
-            <Route path="*" element={<div>❓ Unknown route</div>} />
+            <Route 
+              path="*" 
+              element={
+                <div>
+                  <div>❓ Unknown route</div>
+                  <div>Current pathname: "{window.location.pathname}"</div>
+                  <div>Pathname length: {window.location.pathname.length}</div>
+                  <div>Available routes: ["/", "/login"]</div>
+                </div>
+              } 
+            />
           </Routes>
         </div>
       </BrowserRouter>
