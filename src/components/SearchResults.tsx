@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import VideoCard from '@/components/VideoCard';
+import LocationSearch from '@/components/LocationSearch';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
 
 interface SearchResultsProps {
@@ -10,7 +11,12 @@ interface SearchResultsProps {
 }
 
 const SearchResults = ({ query }: SearchResultsProps) => {
-  const { selectedSpotId } = useLocationPreference();
+  const { selectedSpotId, updateLocationPreference } = useLocationPreference();
+  const [localSpotId, setLocalSpotId] = useState<string | null>(selectedSpotId);
+
+  useEffect(() => {
+    setLocalSpotId(selectedSpotId);
+  }, [selectedSpotId]);
 
   const {
     data,
@@ -21,9 +27,9 @@ const SearchResults = ({ query }: SearchResultsProps) => {
     error,
     refetch
   } = useInfiniteQuery({
-    queryKey: ['search-videos', query, selectedSpotId],
+    queryKey: ['search-videos', query, localSpotId],
     queryFn: async ({ pageParam }) => {
-      console.log('Searching videos with query:', query, 'spotId:', selectedSpotId, 'pageParam:', pageParam);
+      console.log('Searching videos with query:', query, 'spotId:', localSpotId, 'pageParam:', pageParam);
       
       let queryBuilder = supabase
         .from('videos')
@@ -47,8 +53,8 @@ const SearchResults = ({ query }: SearchResultsProps) => {
       }
 
       // Filter by location if selected
-      if (selectedSpotId) {
-        queryBuilder = queryBuilder.eq('spot_id', selectedSpotId);
+      if (localSpotId) {
+        queryBuilder = queryBuilder.eq('spot_id', localSpotId);
       }
 
       if (pageParam) {
@@ -69,18 +75,31 @@ const SearchResults = ({ query }: SearchResultsProps) => {
       return lastPage[lastPage.length - 1]?.created_at;
     },
     initialPageParam: undefined,
-    enabled: query.trim().length > 0 || selectedSpotId !== null
+    enabled: query.trim().length > 0 || localSpotId !== null
   });
 
   useEffect(() => {
     refetch();
-  }, [query, selectedSpotId, refetch]);
+  }, [query, localSpotId, refetch]);
+
+  const handleLocationChange = (spotId: string | null) => {
+    setLocalSpotId(spotId);
+    updateLocationPreference(spotId);
+  };
 
   const allVideos = data?.pages.flatMap(page => page) || [];
 
-  if (!query.trim() && !selectedSpotId) {
+  if (!query.trim() && !localSpotId) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md mb-8">
+          <LocationSearch
+            selectedSpotId={localSpotId}
+            onLocationSelect={handleLocationChange}
+            placeholder="Search for surf spots..."
+            className="w-full"
+          />
+        </div>
         <div className="text-center text-white/60">
           <p className="text-lg mb-2">Search for videos</p>
           <p className="text-sm">Enter a search term or select a location to find videos</p>
@@ -107,6 +126,16 @@ const SearchResults = ({ query }: SearchResultsProps) => {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Location Filter */}
+      <div className="p-4 border-b border-border/20">
+        <LocationSearch
+          selectedSpotId={localSpotId}
+          onLocationSelect={handleLocationChange}
+          placeholder="Filter by location..."
+          className="max-w-md"
+        />
+      </div>
+
       {/* Results */}
       <div className="flex-1 overflow-y-auto">
         {allVideos.length === 0 ? (
@@ -115,7 +144,7 @@ const SearchResults = ({ query }: SearchResultsProps) => {
               <p className="text-lg mb-2">No videos found</p>
               <p className="text-sm">
                 {query.trim() ? 
-                  `No results for "${query}"${selectedSpotId ? ' in this location' : ''}` :
+                  `No results for "${query}"${localSpotId ? ' in this location' : ''}` :
                   'No videos in this location'
                 }
               </p>

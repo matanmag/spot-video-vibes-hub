@@ -2,12 +2,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
 import VideoCard from '@/components/VideoCard';
-import SearchBar from '@/components/SearchBar';
-import BottomTabBar from '@/components/BottomTabBar';
+import LocationSearch from '@/components/LocationSearch';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
 
 const Home = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { selectedSpotId, updateLocationPreference, loading: locationLoading } = useLocationPreference();
@@ -96,6 +100,12 @@ const Home = () => {
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   const allVideos = data?.pages.flatMap(page => page) || [];
 
   if (isLoading || locationLoading) {
@@ -115,19 +125,35 @@ const Home = () => {
   }
 
   return (
-    <>
-      {/* Search Bar Overlay */}
-      <div className="fixed top-0 left-0 right-0 z-50 px-4 pt-3 pb-2 bg-[#111618]/70 backdrop-blur">
-        <SearchBar autoFocus={false} />
+    <div className="relative h-screen overflow-hidden bg-black pb-16">
+      {/* Top Bar with Search and Location */}
+      <div className="absolute top-4 left-4 right-4 z-50">
+        <div className="flex items-center justify-between mb-4">
+          <LocationSearch
+            selectedSpotId={selectedSpotId}
+            onLocationSelect={updateLocationPreference}
+            placeholder="Search surf spots..."
+            className="flex-1 max-w-xs"
+          />
+        </div>
+        
+        <div className="relative max-w-md mx-auto">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            type="text"
+            placeholder="Search videos..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={handleSearchKeyPress}
+            className="pl-10 bg-background/80 backdrop-blur-sm border-border/50"
+          />
+        </div>
       </div>
 
       {/* Video Feed */}
-      <div
-        id="feed"
-        className="h-screen pt-[64px] overflow-y-scroll snap-y snap-mandatory scroll-smooth overscroll-contain"
-      >
+      <div className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide pt-24">
         {allVideos.length === 0 ? (
-          <div className="h-screen flex items-center justify-center snap-start">
+          <div className="h-full flex items-center justify-center">
             <div className="text-center text-white/60">
               <p className="text-lg mb-2">No videos found</p>
               {selectedSpotId ? (
@@ -153,9 +179,7 @@ const Home = () => {
           )}
         </div>
       </div>
-
-      <BottomTabBar />
-    </>
+    </div>
   );
 };
 

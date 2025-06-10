@@ -1,11 +1,35 @@
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Search as SearchIcon } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import SearchResults from '@/components/SearchResults';
-import SearchBar from '@/components/SearchBar';
 
 const Search = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+
+  // Update search query when URL params change
+  useEffect(() => {
+    const queryFromUrl = searchParams.get('q') || '';
+    setSearchQuery(queryFromUrl);
+  }, [searchParams]);
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+    } else {
+      navigate('/search');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch(searchQuery);
+    }
+  };
+
   const currentQuery = searchParams.get('q') || '';
 
   return (
@@ -13,11 +37,22 @@ const Search = () => {
       <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-sm border-b border-border/20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3 mb-4">
+            <SearchIcon className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold text-white">Search</h1>
           </div>
           
           <div className="max-w-md mx-auto">
-            <SearchBar autoFocus />
+            <div className="relative">
+              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Search videos, users, locations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="pl-10 bg-background/80 backdrop-blur-sm border-border/50"
+              />
+            </div>
           </div>
         </div>
       </div>
