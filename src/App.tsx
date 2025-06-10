@@ -27,11 +27,7 @@ const App = () => (
         <BrowserRouter>
           <div className="relative min-h-screen">
             <Routes>
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Home />
-                </ProtectedRoute>
-              } />
+              <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/home" element={
                 <ProtectedRoute>
