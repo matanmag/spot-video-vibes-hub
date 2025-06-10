@@ -26,8 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('🚨 ErrorBoundary detailed error info:', {
       error: error.message,
       stack: error.stack,
-      componentStack: errorInfo.componentStack,
-      errorBoundary: errorInfo.errorBoundary
+      componentStack: errorInfo.componentStack
     });
     
     this.setState({
