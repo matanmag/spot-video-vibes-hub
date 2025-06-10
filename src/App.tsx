@@ -1,70 +1,29 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import BottomTabBar from "@/components/BottomTabBar";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Home from "./pages/Home";
-import Upload from "./pages/Upload";
-import Profile from "./pages/Profile";
-import Map from "./pages/Map";
-import Search from "./pages/Search";
-import NotFound from "./pages/NotFound";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
+import React from 'react';
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <ErrorBoundary>
-        <AuthProvider>
-          <BrowserRouter>
-            <div className="relative min-h-screen">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/home" element={
-                  <ProtectedRoute>
-                    <Home />
-                  </ProtectedRoute>
-                } />
-                <Route path="/map" element={
-                  <ProtectedRoute>
-                    <Map />
-                  </ProtectedRoute>
-                } />
-                <Route path="/upload" element={
-                  <ProtectedRoute>
-                    <Upload />
-                  </ProtectedRoute>
-                } />
-                <Route path="/search" element={
-                  <ProtectedRoute>
-                    <Search />
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                } />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <BottomTabBar />
-            </div>
-          </BrowserRouter>
-        </AuthProvider>
-      </ErrorBoundary>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+// Temporary simplified App for debugging white screen issue
+const App = () => {
+  console.log('App component is rendering');
+  
+  try {
+    return (
+      <div style={{ padding: '20px', fontSize: '24px', color: 'green' }}>
+        <h1>🟢 App is working! Basic rendering confirmed.</h1>
+        <p>Timestamp: {new Date().toISOString()}</p>
+        <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#f0f0f0' }}>
+          Hello World - React is functioning correctly
+        </div>
+      </div>
+    );
+  } catch (error) {
+    console.error('Error in App component render:', error);
+    return (
+      <div style={{ padding: '20px', color: 'red' }}>
+        <h1>❌ App component error</h1>
+        <pre>{error instanceof Error ? error.message : 'Unknown error'}</pre>
+      </div>
+    );
+  }
+};
 
 export default App;
