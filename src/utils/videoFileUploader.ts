@@ -13,21 +13,6 @@ export const uploadVideoFiles = async (
   thumbnailBlob: Blob,
   userId: string
 ): Promise<UploadResult> => {
-  // Check if storage buckets exist
-  const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-  
-  if (bucketsError) {
-    console.error('Error checking buckets:', bucketsError);
-    throw new Error('Storage not configured. Please set up Supabase storage buckets.');
-  }
-
-  const videosBucket = buckets?.find(bucket => bucket.name === 'videos-public');
-  
-  if (!videosBucket) {
-    console.error('videos-public bucket not found. Available buckets:', buckets?.map(b => b.name));
-    throw new Error('Storage bucket "videos-public" not found. Please create it in Supabase dashboard.');
-  }
-
   // Generate unique filenames
   const timestamp = Date.now();
   const fileExt = file.name.split('.').pop();
@@ -50,7 +35,7 @@ export const uploadVideoFiles = async (
 
     if (originalError) {
       console.error('Original video upload error:', originalError);
-      throw originalError;
+      throw new Error(`Failed to upload video: ${originalError.message}`);
     }
 
     // Upload preview video (for now, same as original)
@@ -63,12 +48,12 @@ export const uploadVideoFiles = async (
 
     if (previewError) {
       console.error('Preview video upload error:', previewError);
-      throw previewError;
+      throw new Error(`Failed to upload preview: ${previewError.message}`);
     }
 
-    // Upload thumbnail
+    // Upload thumbnail to thumbnails bucket
     const { data: thumbnailUpload, error: thumbnailError } = await supabase.storage
-      .from('videos-public')
+      .from('thumbnails-public')
       .upload(thumbnailFileName, thumbnailBlob, {
         cacheControl: '3600',
         upsert: false
@@ -76,7 +61,7 @@ export const uploadVideoFiles = async (
 
     if (thumbnailError) {
       console.error('Thumbnail upload error:', thumbnailError);
-      throw thumbnailError;
+      throw new Error(`Failed to upload thumbnail: ${thumbnailError.message}`);
     }
 
     // Get public URLs
@@ -89,7 +74,7 @@ export const uploadVideoFiles = async (
       .getPublicUrl(previewFileName);
 
     const { data: { publicUrl: thumbnailUrl } } = supabase.storage
-      .from('videos-public')
+      .from('thumbnails-public')
       .getPublicUrl(thumbnailFileName);
 
     console.log('Files uploaded successfully:', { originalUrl, optimizedUrl, thumbnailUrl });
