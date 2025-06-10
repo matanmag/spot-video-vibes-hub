@@ -1,17 +1,12 @@
 
-import { useNetworkQuality } from '@/hooks/useNetworkQuality';
-import { useVideoPlayerState } from '@/hooks/useVideoPlayerState';
-import { useVideoPlayerEffects } from '@/hooks/useVideoPlayerEffects';
-import VideoPlayerControls from '@/components/VideoPlayerControls';
-import VideoPlayerOverlays from '@/components/VideoPlayerOverlays';
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { useVideoViews } from '@/hooks/useVideoViews';
 
 interface Video {
   id: string;
   title: string;
   video_url: string;
-  optimized_720p_url?: string;
-  optimized_480p_url?: string;
-  optimized_1080p_url?: string;
+  optimized_url?: string;
   thumbnail_url?: string;
 }
 
@@ -21,109 +16,136 @@ interface VideoPlayerProps {
 }
 
 const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
-  const {
-    videoRef,
-    isPlaying,
-    setIsPlaying,
-    isInView,
-    setIsInView,
-    currentQuality,
-    setCurrentQuality,
-    isBuffering,
-    setIsBuffering,
-    showControls,
-    setShowControls
-  } = useVideoPlayerState();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [hasSource, setHasSource] = useState(false);
+  const { trackView } = useVideoViews(video.id);
 
-  const { networkQuality, optimalQuality } = useNetworkQuality();
+  const handlePlayVideo = useCallback(async () => {
+    if (videoRef.current && isReady) {
+      try {
+        await videoRef.current.play();
+        setIsPlaying(true);
+        trackView();
+      } catch (error) {
+        console.error('Error playing video:', error);
+      }
+    }
+  }, [trackView, isReady]);
 
-  // Get video URL based on quality selection
-  const getVideoUrl = (quality: string) => {
-    if (quality === 'auto') {
-      quality = optimalQuality;
+  const handlePauseVideo = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, []);
+
+  // Intersection observer for detecting when video is in view
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        const isVisible = entry.isIntersecting && entry.intersectionRatio > 0.7;
+        
+        setIsInView(isVisible);
+      },
+      {
+        threshold: [0.7],
+        rootMargin: '-10% 0px -10% 0px'
+      }
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
     }
 
-    switch (quality) {
-      case '480p':
-        return video.optimized_480p_url || video.video_url;
-      case '720p':
-        return video.optimized_720p_url || video.video_url;
-      case '1080p':
-        return video.optimized_1080p_url || video.video_url;
-      default:
-        return video.video_url;
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, [containerRef]);
+
+  // Lazy loading: attach src only when in view
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (!videoElement || hasSource) return;
+
+    if (isInView) {
+      // Use optimized URL if available, otherwise fall back to original
+      const videoUrl = video.optimized_url || video.video_url;
+      videoElement.src = videoUrl;
+      setHasSource(true);
+      console.log(`Loading video source: ${video.title}`);
     }
-  };
+  }, [isInView, video.optimized_url, video.video_url, video.title, hasSource]);
 
-  const currentVideoUrl = getVideoUrl(currentQuality);
-
-  useVideoPlayerEffects({
-    video,
-    containerRef,
-    videoRef,
-    currentVideoUrl,
-    setIsInView,
-    setIsPlaying
-  });
+  // Play/pause based on view state
+  useEffect(() => {
+    if (isInView && isReady) {
+      handlePlayVideo();
+    } else {
+      handlePauseVideo();
+    }
+  }, [isInView, isReady, handlePlayVideo, handlePauseVideo]);
 
   const handleVideoClick = () => {
-    if (videoRef.current) {
+    if (videoRef.current && isReady) {
       if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
+        handlePauseVideo();
       } else {
-        videoRef.current.play();
-        setIsPlaying(true);
+        handlePlayVideo();
       }
     }
   };
 
-  const handleQualityChange = (quality: string) => {
-    setCurrentQuality(quality);
+  const handleCanPlay = () => {
+    console.log(`Video ready: ${video.title}`);
+    setIsReady(true);
+  };
+
+  const handleError = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+    console.error(`Video error for ${video.title}:`, e);
+    setIsReady(false);
   };
 
   return (
     <>
+      {/* Thumbnail placeholder - shown until video is ready */}
+      {!isReady && video.thumbnail_url && (
+        <div className="absolute inset-0">
+          <img
+            src={video.thumbnail_url}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover blur-lg scale-110"
+          />
+        </div>
+      )}
+
+      {/* Video Element */}
       <video
         ref={videoRef}
-        src={currentVideoUrl}
         className="h-full w-full object-cover cursor-pointer"
+        preload="metadata"
         muted
-        loop
         playsInline
+        loop
         poster={video.thumbnail_url}
         onClick={handleVideoClick}
-        onLoadStart={() => {
-          console.log(`Loading video: ${video.title} (${currentQuality})`);
-          setIsBuffering(true);
-        }}
-        onCanPlay={() => {
-          console.log(`Video ready: ${video.title} (${currentQuality})`);
-          setIsBuffering(false);
-        }}
-        onWaiting={() => setIsBuffering(true)}
-        onPlaying={() => setIsBuffering(false)}
-        onError={(e) => console.error(`Video error for ${video.title}:`, e)}
-        onMouseEnter={() => setShowControls(true)}
-        onMouseLeave={() => setShowControls(false)}
+        onCanPlay={handleCanPlay}
+        onError={handleError}
       />
 
-      <VideoPlayerOverlays
-        isBuffering={isBuffering}
-        isPlaying={isPlaying}
-        isInView={isInView}
-      />
-
-      <VideoPlayerControls
-        video={video}
-        showControls={showControls}
-        isBuffering={isBuffering}
-        currentQuality={currentQuality}
-        networkQuality={networkQuality}
-        optimalQuality={optimalQuality}
-        onQualityChange={handleQualityChange}
-        getVideoUrl={getVideoUrl}
-      />
+      {/* Play/Pause indicator */}
+      {!isPlaying && isInView && isReady && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-16 h-16 bg-black/50 rounded-full flex items-center justify-center">
+            <div className="w-0 h-0 border-l-[12px] border-l-white border-y-[8px] border-y-transparent ml-1"></div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

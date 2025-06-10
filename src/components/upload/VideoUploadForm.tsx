@@ -1,9 +1,13 @@
 
-import { UploadIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useVideoUploadState } from '@/hooks/useVideoUploadState';
-import { VideoUploadContent } from './VideoUploadContent';
-import { VideoUploadActions } from './VideoUploadActions';
+import { UploadIcon } from 'lucide-react';
+import { FileDropzone } from './FileDropzone';
+import { VideoPreview } from './VideoPreview';
+import { VideoDetailsForm } from './VideoDetailsForm';
+import { EncoderLoadingSpinner } from './EncoderLoadingSpinner';
+import { LocationSection } from './LocationSection';
+import { UploadSection } from './UploadSection';
+import { useUploadForm } from '@/hooks/useUploadForm';
 
 export const VideoUploadForm = () => {
   const {
@@ -13,17 +17,15 @@ export const VideoUploadForm = () => {
     selectedSpotId,
     previewUrl,
     isEncoderLoading,
-    enableCompression,
     uploading,
     progress,
+    handleFileChange,
+    handleUpload,
+    resetForm,
     setTitle,
     setDescription,
     setSelectedSpotId,
-    setEnableCompression,
-    handleFileChange,
-    handleUpload,
-    resetForm
-  } = useVideoUploadState();
+  } = useUploadForm();
 
   return (
     <Card>
@@ -33,31 +35,40 @@ export const VideoUploadForm = () => {
           Video Upload
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <VideoUploadContent
-          file={file}
-          previewUrl={previewUrl}
+      <CardContent className="space-y-6">
+        <FileDropzone onFileChange={handleFileChange} disabled={uploading || isEncoderLoading} />
+
+        {file && previewUrl && (
+          <VideoPreview 
+            file={file}
+            previewUrl={previewUrl}
+            onRemove={resetForm}
+          />
+        )}
+
+        {isEncoderLoading && <EncoderLoadingSpinner />}
+
+        <VideoDetailsForm
           title={title}
           description={description}
-          selectedSpotId={selectedSpotId}
-          isEncoderLoading={isEncoderLoading}
-          enableCompression={enableCompression}
-          uploading={uploading}
-          onFileChange={handleFileChange}
           onTitleChange={setTitle}
           onDescriptionChange={setDescription}
-          onLocationSelect={setSelectedSpotId}
-          onCompressionChange={setEnableCompression}
-          onRemoveFile={resetForm}
+          disabled={uploading || isEncoderLoading}
         />
 
-        <VideoUploadActions
-          file={file}
-          title={title}
-          uploading={uploading}
-          isEncoderLoading={isEncoderLoading}
-          progress={progress}
+        <LocationSection
+          selectedSpotId={selectedSpotId}
+          onLocationSelect={setSelectedSpotId}
+          disabled={uploading || isEncoderLoading}
+        />
+
+        <UploadSection
           onUpload={handleUpload}
+          uploading={uploading}
+          progress={progress}
+          isEncoderLoading={isEncoderLoading}
+          hasFile={!!file}
+          hasTitle={!!title.trim()}
         />
       </CardContent>
     </Card>

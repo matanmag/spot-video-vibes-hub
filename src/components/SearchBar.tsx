@@ -1,25 +1,25 @@
 
+import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useNavigate } from 'react-router-dom';
 import LocationSearch from '@/components/LocationSearch';
 
-interface HomeHeaderProps {
+interface SearchBarProps {
   selectedSpotId: string | null;
-  onLocationSelect: (spotId: string | null, spotName?: string) => void;
-  searchQuery: string;
-  onSearchQueryChange: (query: string) => void;
-  onSearchKeyPress: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-  optimalQuality: string;
+  onLocationSelect: (spotId: string | null) => void;
 }
 
-const HomeHeader = ({
-  selectedSpotId,
-  onLocationSelect,
-  searchQuery,
-  onSearchQueryChange,
-  onSearchKeyPress,
-  optimalQuality
-}: HomeHeaderProps) => {
+const SearchBar = ({ selectedSpotId, onLocationSelect }: SearchBarProps) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   return (
     <div className="absolute top-4 left-4 right-4 z-50">
       <div className="flex items-center justify-between mb-4">
@@ -29,11 +29,6 @@ const HomeHeader = ({
           placeholder="Search surf spots..."
           className="flex-1 max-w-xs"
         />
-        
-        {/* Network quality indicator */}
-        <div className="text-xs text-white/60 bg-black/50 px-2 py-1 rounded">
-          {optimalQuality}
-        </div>
       </div>
       
       <div className="relative max-w-md mx-auto">
@@ -42,8 +37,8 @@ const HomeHeader = ({
           type="text"
           placeholder="Search videos..."
           value={searchQuery}
-          onChange={(e) => onSearchQueryChange(e.target.value)}
-          onKeyPress={onSearchKeyPress}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={handleSearchKeyPress}
           className="pl-10 bg-background/80 backdrop-blur-sm border-border/50"
         />
       </div>
@@ -51,4 +46,4 @@ const HomeHeader = ({
   );
 };
 
-export default HomeHeader;
+export default SearchBar;

@@ -1,109 +1,71 @@
 
-import React from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { SafeTestWrapper } from './components/SafeTestWrapper';
-import { AuthProvider } from './hooks/useAuth';
-import Index from './pages/Index';
-import Login from './pages/Login';
-import TestLogin from './pages/TestLogin';
-import MinimalTest from './components/MinimalTest';
-import Home from './pages/Home';
-import Upload from './pages/Upload';
-import Profile from './pages/Profile';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import BottomTabBar from "@/components/BottomTabBar";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Home from "./pages/Home";
+import Upload from "./pages/Upload";
+import Profile from "./pages/Profile";
+import Map from "./pages/Map";
+import Search from "./pages/Search";
+import NotFound from "./pages/NotFound";
 
-const DebugLocation = () => {
-  const location = useLocation();
-  console.log('🔍 Current location:', {
-    pathname: location.pathname,
-    search: location.search,
-    hash: location.hash
-  });
-  console.log('🔍 Exact pathname for matching:', `"${location.pathname}"`);
-  console.log('🔍 Pathname length:', location.pathname.length);
-  return null;
-};
+const queryClient = new QueryClient();
 
-const App = () => {
-  console.log('🚀 App component rendering - Debug version with test routes');
-  
-  return (
-    <AuthProvider>
-      <BrowserRouter>
-        <DebugLocation />
-        <div style={{ padding: '20px' }}>
-          <Routes>
-            <Route 
-              path="/" 
-              element={
-                <SafeTestWrapper componentName="Index">
-                  <Index />
-                </SafeTestWrapper>
-              } 
-            />
-            <Route 
-              path="/login" 
-              element={
-                <SafeTestWrapper componentName="Login">
-                  <Login />
-                </SafeTestWrapper>
-              } 
-            />
-            <Route 
-              path="/test-login" 
-              element={
-                <SafeTestWrapper componentName="TestLogin">
-                  <TestLogin />
-                </SafeTestWrapper>
-              } 
-            />
-            <Route 
-              path="/minimal-test" 
-              element={
-                <SafeTestWrapper componentName="MinimalTest">
-                  <MinimalTest />
-                </SafeTestWrapper>
-              } 
-            />
-            <Route 
-              path="/home" 
-              element={
-                <SafeTestWrapper componentName="Home">
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <AuthProvider>
+        <BrowserRouter>
+          <div className="relative min-h-screen">
+            <Routes>
+              <Route path="/" element={
+                <ProtectedRoute>
                   <Home />
-                </SafeTestWrapper>
-              } 
-            />
-            <Route 
-              path="/upload" 
-              element={
-                <SafeTestWrapper componentName="Upload">
+                </ProtectedRoute>
+              } />
+              <Route path="/login" element={<Login />} />
+              <Route path="/home" element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              } />
+              <Route path="/map" element={
+                <ProtectedRoute>
+                  <Map />
+                </ProtectedRoute>
+              } />
+              <Route path="/upload" element={
+                <ProtectedRoute>
                   <Upload />
-                </SafeTestWrapper>
-              } 
-            />
-            <Route 
-              path="/profile" 
-              element={
-                <SafeTestWrapper componentName="Profile">
+                </ProtectedRoute>
+              } />
+              <Route path="/search" element={
+                <ProtectedRoute>
+                  <Search />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
                   <Profile />
-                </SafeTestWrapper>
-              } 
-            />
-            <Route 
-              path="*" 
-              element={
-                <div>
-                  <div>❓ Unknown route</div>
-                  <div>Current pathname: "{window.location.pathname}"</div>
-                  <div>Pathname length: {window.location.pathname.length}</div>
-                  <div>Available routes: ["/", "/login", "/test-login", "/minimal-test", "/home", "/upload", "/profile"]</div>
-                </div>
-              } 
-            />
-          </Routes>
-        </div>
-      </BrowserRouter>
-    </AuthProvider>
-  );
-};
+                </ProtectedRoute>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <BottomTabBar />
+          </div>
+        </BrowserRouter>
+      </AuthProvider>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;

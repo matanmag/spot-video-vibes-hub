@@ -1,21 +1,20 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { useVideoUpload } from '@/hooks/useVideoUpload';
-import { useSpots } from '@/hooks/useSpots';
+import { useAuth } from './useAuth';
+import { useToast } from './use-toast';
+import { useVideoUpload } from './useVideoUpload';
+import { useSpots } from './useSpots';
 import { useNavigate } from 'react-router-dom';
 import { validateVideoFile, generateTitleFromFilename } from '@/utils/videoValidation';
 import { MAX_FILE_SIZE } from '@/constants/videoFormats';
 
-export const useVideoUploadState = () => {
+export const useUploadForm = () => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isEncoderLoading, setIsEncoderLoading] = useState(false);
-  const [enableCompression, setEnableCompression] = useState(true);
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -33,24 +32,6 @@ export const useVideoUploadState = () => {
     };
     initializeDefaultSpot();
   }, [user, createDefaultSpot]);
-
-  const initializeEncoder = async () => {
-    setIsEncoderLoading(true);
-    try {
-      // Simulate FFmpeg.wasm initialization
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('FFmpeg encoder ready');
-    } catch (error) {
-      console.error('Failed to initialize encoder:', error);
-      toast({
-        title: "Encoder initialization failed",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsEncoderLoading(false);
-    }
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -92,15 +73,21 @@ export const useVideoUploadState = () => {
     }
   };
 
-  const resetForm = () => {
-    setFile(null);
-    setTitle('');
-    setDescription('');
-    setSelectedSpotId(null);
-    setIsEncoderLoading(false);
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-      setPreviewUrl(null);
+  const initializeEncoder = async () => {
+    setIsEncoderLoading(true);
+    try {
+      // Simulate FFmpeg.wasm initialization
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('FFmpeg encoder ready');
+    } catch (error) {
+      console.error('Failed to initialize encoder:', error);
+      toast({
+        title: "Encoder initialization failed",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsEncoderLoading(false);
     }
   };
 
@@ -142,18 +129,32 @@ export const useVideoUploadState = () => {
       return;
     }
 
-    console.log('Starting video upload process with compression:', enableCompression);
+    console.log('Starting video upload process');
     const result = await uploadVideo(
       file, 
       title.trim(), 
       description.trim(), 
-      selectedSpotId || undefined,
-      enableCompression
+      selectedSpotId || undefined
     );
     
     if (result) {
+      // Reset form
       resetForm();
+      
+      // Navigate to home page
       navigate('/home');
+    }
+  };
+
+  const resetForm = () => {
+    setFile(null);
+    setTitle('');
+    setDescription('');
+    setSelectedSpotId(null);
+    setIsEncoderLoading(false);
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
     }
   };
 
@@ -165,17 +166,15 @@ export const useVideoUploadState = () => {
     selectedSpotId,
     previewUrl,
     isEncoderLoading,
-    enableCompression,
     uploading,
     progress,
     
     // Actions
+    handleFileChange,
+    handleUpload,
+    resetForm,
     setTitle,
     setDescription,
     setSelectedSpotId,
-    setEnableCompression,
-    handleFileChange,
-    handleUpload,
-    resetForm
   };
 };

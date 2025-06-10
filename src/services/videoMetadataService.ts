@@ -1,0 +1,49 @@
+
+import { supabase } from '@/integrations/supabase/client';
+
+interface VideoMetadata {
+  title: string;
+  description: string;
+  videoUrl: string;
+  optimizedUrl: string;
+  thumbnailUrl: string;
+  spotId: string;
+  userId: string;
+}
+
+export const saveVideoMetadata = async (metadata: VideoMetadata) => {
+  const { data: videoData, error: dbError } = await supabase
+    .from('videos')
+    .insert({
+      user_id: metadata.userId,
+      title: metadata.title,
+      description: metadata.description,
+      video_url: metadata.videoUrl,
+      optimized_url: metadata.optimizedUrl,
+      thumbnail_url: metadata.thumbnailUrl,
+      spot_id: metadata.spotId,
+      duration: null,
+    })
+    .select()
+    .single();
+
+  if (dbError) {
+    console.error('Database error:', dbError);
+    throw dbError;
+  }
+
+  console.log('Video metadata saved:', videoData);
+  return videoData;
+};
+
+export const updateUserLocationPreference = async (userId: string, spotId: string) => {
+  try {
+    await supabase
+      .from('profiles')
+      .update({ last_spot_id: spotId })
+      .eq('id', userId);
+  } catch (error) {
+    console.error('Error updating user location preference:', error);
+    // Don't throw here as the video upload was successful
+  }
+};
