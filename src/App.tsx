@@ -5,6 +5,8 @@ import { SafeTestWrapper } from './components/SafeTestWrapper';
 import { AuthProvider } from './hooks/useAuth';
 import Index from './pages/Index';
 import Login from './pages/Login';
+import TestLogin from './pages/TestLogin';
+import MinimalTest from './components/MinimalTest';
 import Home from './pages/Home';
 import Upload from './pages/Upload';
 import Profile from './pages/Profile';
@@ -22,7 +24,7 @@ const DebugLocation = () => {
 };
 
 const App = () => {
-  console.log('🚀 App component rendering - Step 3: Adding all main routes with SafeTestWrapper');
+  console.log('🚀 App component rendering - Debug version with test routes');
   
   return (
     <AuthProvider>
@@ -43,6 +45,22 @@ const App = () => {
               element={
                 <SafeTestWrapper componentName="Login">
                   <Login />
+                </SafeTestWrapper>
+              } 
+            />
+            <Route 
+              path="/test-login" 
+              element={
+                <SafeTestWrapper componentName="TestLogin">
+                  <TestLogin />
+                </SafeTestWrapper>
+              } 
+            />
+            <Route 
+              path="/minimal-test" 
+              element={
+                <SafeTestWrapper componentName="MinimalTest">
+                  <MinimalTest />
                 </SafeTestWrapper>
               } 
             />
@@ -77,7 +95,7 @@ const App = () => {
                   <div>❓ Unknown route</div>
                   <div>Current pathname: "{window.location.pathname}"</div>
                   <div>Pathname length: {window.location.pathname.length}</div>
-                  <div>Available routes: ["/", "/login", "/home", "/upload", "/profile"]</div>
+                  <div>Available routes: ["/", "/login", "/test-login", "/minimal-test", "/home", "/upload", "/profile"]</div>
                 </div>
               } 
             />
