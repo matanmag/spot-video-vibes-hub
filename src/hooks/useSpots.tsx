@@ -1,19 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-interface Spot {
-  id: string;
-  name: string;
-  description?: string;
-  latitude: number;
-  longitude: number;
-  created_at: string;
-  updated_at: string;
-}
+import { SurfSpot } from '@/types/surf-spot';
 
 export const useSpots = () => {
-  const [spots, setSpots] = useState<Spot[]>([]);
+  const [spots, setSpots] = useState<SurfSpot[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

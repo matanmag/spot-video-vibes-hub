@@ -6,18 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-
-// Interface for spots from database
-interface Spot {
-  id: string;
-  name: string;
-  country?: string;
-  latitude: number;
-  longitude: number;
-  description?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { SurfSpot } from '@/types/surf-spot';
 
 // Fix for default marker icons in Leaflet with Next.js
 const icon = L.icon({
@@ -31,7 +20,7 @@ const icon = L.icon({
 });
 
 export function SurfSpots() {
-    const [spots, setSpots] = useState<Spot[]>([]);
+    const [spots, setSpots] = useState<SurfSpot[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -84,7 +73,7 @@ export function SurfSpots() {
                         {spots.map((spot) => (
                             <Marker
                                 key={spot.id}
-                                position={[spot.latitude, spot.longitude]}
+                                position={[Number(spot.latitude), Number(spot.longitude)]}
                                 icon={icon}
                             >
                                 <Popup>
@@ -126,7 +115,7 @@ export function SurfSpots() {
                                             </p>
                                         )}
                                         <p className="text-xs text-muted-foreground">
-                                            Coordinates: {spot.latitude.toFixed(4)}, {spot.longitude.toFixed(4)}
+                                            Coordinates: {Number(spot.latitude).toFixed(4)}, {Number(spot.longitude).toFixed(4)}
                                         </p>
                                     </div>
                                 </CardContent>
