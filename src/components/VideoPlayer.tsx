@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useVideoViews } from '@/hooks/useVideoViews';
 
 interface Video {
@@ -20,30 +20,42 @@ const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
   const [isInView, setIsInView] = useState(false);
   const { trackView } = useVideoViews(video.id);
 
+  const handlePlayVideo = useCallback(async () => {
+    if (videoRef.current) {
+      try {
+        await videoRef.current.play();
+        setIsPlaying(true);
+        trackView();
+      } catch (error) {
+        console.error('Error playing video:', error);
+      }
+    }
+  }, [trackView]);
+
+  const handlePauseVideo = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, []);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        setIsInView(entry.isIntersecting);
+        const isVisible = entry.isIntersecting && entry.intersectionRatio > 0.8;
         
-        if (videoRef.current) {
-          if (entry.isIntersecting) {
-            // Track view when video becomes visible and starts playing
-            trackView();
-            
-            videoRef.current.play().then(() => {
-              setIsPlaying(true);
-            }).catch((error) => {
-              console.error('Error playing video:', error);
-            });
-          } else {
-            videoRef.current.pause();
-            setIsPlaying(false);
-          }
+        setIsInView(isVisible);
+        
+        if (isVisible) {
+          handlePlayVideo();
+        } else {
+          handlePauseVideo();
         }
       },
       {
-        threshold: 0.5, // Video needs to be 50% visible to play
+        threshold: [0, 0.5, 0.8, 1.0],
+        rootMargin: '-10% 0px -10% 0px'
       }
     );
 
@@ -56,16 +68,14 @@ const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
         observer.unobserve(containerRef.current);
       }
     };
-  }, [containerRef, trackView]);
+  }, [containerRef, handlePlayVideo, handlePauseVideo]);
 
   const handleVideoClick = () => {
     if (videoRef.current) {
       if (isPlaying) {
-        videoRef.current.pause();
-        setIsPlaying(false);
+        handlePauseVideo();
       } else {
-        videoRef.current.play();
-        setIsPlaying(true);
+        handlePlayVideo();
       }
     }
   };
