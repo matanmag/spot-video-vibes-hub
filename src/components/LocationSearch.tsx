@@ -75,13 +75,14 @@ const LocationSearch = ({
   // Search for spots when query changes
   useEffect(() => {
     const searchSpots = async () => {
-      if (searchQuery.trim().length < 2) {
+      if (searchQuery.trim().length < 1) {
         setSearchResults([]);
         return;
       }
 
       setLoading(true);
       try {
+        console.log('Searching for:', searchQuery);
         const { data, error } = await supabase.rpc('search_spots', {
           q: searchQuery.trim()
         });
@@ -90,6 +91,7 @@ const LocationSearch = ({
           console.error('Search error:', error);
           setSearchResults([]);
         } else {
+          console.log('Search results:', data);
           setSearchResults(data || []);
         }
       } catch (error) {
@@ -100,7 +102,7 @@ const LocationSearch = ({
       }
     };
 
-    const timeoutId = setTimeout(searchSpots, 300); // Debounce search
+    const timeoutId = setTimeout(searchSpots, 200); // Faster debounce
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
@@ -133,9 +135,16 @@ const LocationSearch = ({
     handleLocationSelect(null);
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      setSearchQuery('');
+    }
+  };
+
   return (
     <div className={`relative ${className}`}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -146,7 +155,7 @@ const LocationSearch = ({
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <span className="truncate">
-                {selectedSpotName || "All Locations"}
+                {selectedSpotName || "Search surf spots..."}
               </span>
             </div>
             <div className="flex items-center gap-1">
@@ -167,30 +176,37 @@ const LocationSearch = ({
             </div>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-0 bg-background/95 backdrop-blur-sm border-border/50">
-          <Command>
+        <PopoverContent className="w-80 p-0 bg-background/95 backdrop-blur-sm border-border/50" align="start">
+          <Command shouldFilter={false}>
             <CommandInput
               placeholder={placeholder}
               value={searchQuery}
-              onValueChange={setSearchQuery}
+              onValueChange={(value) => {
+                console.log('Search input changed:', value);
+                setSearchQuery(value);
+              }}
+              className="h-9"
             />
             <CommandList>
               <CommandEmpty>
-                {loading ? "Searching..." : "No locations found."}
+                {loading ? "Searching..." : searchQuery.length > 0 ? "No locations found." : "Start typing to search..."}
               </CommandEmpty>
               
               <CommandGroup>
-                <CommandItem
-                  onSelect={() => handleLocationSelect(null)}
-                  className="cursor-pointer"
-                >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  All Locations
-                </CommandItem>
+                {!selectedSpotId && (
+                  <CommandItem
+                    onSelect={() => handleLocationSelect(null)}
+                    className="cursor-pointer"
+                  >
+                    <MapPin className="mr-2 h-4 w-4" />
+                    All Locations
+                  </CommandItem>
+                )}
                 
                 {searchResults.map((spot) => (
                   <CommandItem
                     key={spot.id}
+                    value={spot.name}
                     onSelect={() => handleLocationSelect(spot)}
                     className="cursor-pointer"
                   >
