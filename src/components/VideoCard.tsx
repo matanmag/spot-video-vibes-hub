@@ -33,7 +33,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
   return (
     <div
       ref={containerRef}
-      className="relative h-screen w-full snap-start flex items-center justify-center bg-black"
+      className="h-screen w-full snap-start flex-shrink-0 flex flex-col relative bg-black"
     >
       <VideoPlayer video={video} containerRef={containerRef} />
 

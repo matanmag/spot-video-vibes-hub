@@ -114,16 +114,19 @@ const Home = () => {
   }
 
   return (
-    <div className="relative h-screen overflow-hidden bg-black pb-16">
+    <div className="relative h-screen bg-black">
       {/* Search Bar */}
       <div className="absolute top-4 left-4 right-4 z-50">
         <SearchBar autoFocus={false} />
       </div>
 
       {/* Video Feed */}
-      <div className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide pt-20">
+      <div
+        id="feed"
+        className="h-screen overflow-y-scroll snap-y snap-mandatory scroll-smooth overscroll-contain pb-16"
+      >
         {allVideos.length === 0 ? (
-          <div className="h-full flex items-center justify-center">
+          <div className="h-screen flex items-center justify-center snap-start">
             <div className="text-center text-white/60">
               <p className="text-lg mb-2">No videos found</p>
               {selectedSpotId ? (

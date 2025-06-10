@@ -75,6 +75,10 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 10.6% 64.9%;
   }
+
+  html, body, #root {
+    height: 100%;
+  }
 }
 
 @layer base {

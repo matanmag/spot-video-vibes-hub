@@ -23,27 +23,29 @@ const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        const entry = entries[0];
-        setIsInView(entry.isIntersecting);
-        
-        if (videoRef.current) {
-          if (entry.isIntersecting) {
-            // Track view when video becomes visible and starts playing
-            trackView();
-            
-            videoRef.current.play().then(() => {
-              setIsPlaying(true);
-            }).catch((error) => {
-              console.error('Error playing video:', error);
-            });
-          } else {
-            videoRef.current.pause();
-            setIsPlaying(false);
+        entries.forEach((entry) => {
+          const intersectionRatio = entry.intersectionRatio;
+          setIsInView(entry.isIntersecting);
+          
+          if (videoRef.current) {
+            if (entry.isIntersecting && intersectionRatio > 0.7) {
+              // Track view when video becomes visible and starts playing
+              trackView();
+              
+              videoRef.current.play().then(() => {
+                setIsPlaying(true);
+              }).catch((error) => {
+                console.error('Error playing video:', error);
+              });
+            } else {
+              videoRef.current.pause();
+              setIsPlaying(false);
+            }
           }
-        }
+        });
       },
       {
-        threshold: 0.5, // Video needs to be 50% visible to play
+        threshold: [0.7], // Video needs to be 70% visible to play
       }
     );
 
@@ -76,7 +78,7 @@ const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
       <video
         ref={videoRef}
         src={video.video_url}
-        className="h-full w-full object-cover cursor-pointer"
+        className="w-full h-full object-cover cursor-pointer"
         muted
         loop
         playsInline
