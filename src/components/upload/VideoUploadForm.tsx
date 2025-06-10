@@ -24,6 +24,7 @@ export const VideoUploadForm = () => {
   const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isEncoderLoading, setIsEncoderLoading] = useState(false);
+  const [enableCompression, setEnableCompression] = useState(true);
   
   const { user } = useAuth();
   const { toast } = useToast();
@@ -138,19 +139,17 @@ export const VideoUploadForm = () => {
       return;
     }
 
-    console.log('Starting video upload process');
+    console.log('Starting video upload process with compression:', enableCompression);
     const result = await uploadVideo(
       file, 
       title.trim(), 
       description.trim(), 
-      selectedSpotId || undefined
+      selectedSpotId || undefined,
+      enableCompression
     );
     
     if (result) {
-      // Reset form
       resetForm();
-      
-      // Navigate to home page
       navigate('/home');
     }
   };
@@ -209,7 +208,28 @@ export const VideoUploadForm = () => {
           </p>
         </div>
 
-        {uploading && <UploadProgress progress={progress} />}
+        <CompressionSettings
+          enableCompression={enableCompression}
+          onCompressionChange={setEnableCompression}
+          disabled={uploading || isEncoderLoading}
+        />
+
+        {uploading && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>
+                {progress.stage === 'compression' ? 'Compressing...' : 'Uploading...'}
+              </span>
+              <span>{Math.round(progress.overall)}%</span>
+            </div>
+            <UploadProgress progress={progress.overall} />
+            {progress.compression && progress.stage === 'compression' && (
+              <div className="text-xs text-muted-foreground">
+                Compression: {Math.round(progress.compression)}%
+              </div>
+            )}
+          </div>
+        )}
 
         <Button 
           onClick={handleUpload} 
@@ -217,7 +237,9 @@ export const VideoUploadForm = () => {
           className="w-full"
           size="lg"
         >
-          {uploading ? "Uploading..." : isEncoderLoading ? "Preparing..." : "Upload Video"}
+          {uploading ? (
+            progress.stage === 'compression' ? 'Compressing...' : 'Uploading...'
+          ) : isEncoderLoading ? 'Preparing...' : 'Upload Video'}
         </Button>
       </CardContent>
     </Card>

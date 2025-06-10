@@ -3,14 +3,31 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { videoCompressionService, COMPRESSION_QUALITIES } from '@/services/videoCompression';
+
+interface UploadProgress {
+  overall: number;
+  compression?: number;
+  upload?: number;
+  stage: 'compression' | 'upload' | 'complete';
+}
 
 export const useVideoUpload = () => {
   const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState<UploadProgress>({
+    overall: 0,
+    stage: 'compression'
+  });
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const uploadVideo = async (file: File, title: string, description?: string, spotId?: string) => {
+  const uploadVideo = async (
+    file: File, 
+    title: string, 
+    description?: string, 
+    spotId?: string,
+    enableCompression: boolean = true
+  ) => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -21,61 +38,112 @@ export const useVideoUpload = () => {
     }
 
     setUploading(true);
-    setProgress(0);
+    setProgress({ overall: 0, stage: 'compression' });
 
     try {
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+      let originalFileUrl = '';
+      let compressedUrls: Record<string, string> = {};
+      let thumbnailUrl = '';
+      let duration = 0;
 
-      console.log('Starting video upload:', fileName);
+      // Initialize compression service
+      if (enableCompression) {
+        await videoCompressionService.initialize();
+        
+        // Generate thumbnail
+        setProgress({ overall: 10, compression: 0, stage: 'compression' });
+        const thumbnailFile = await videoCompressionService.generateThumbnail(file);
+        
+        // Upload thumbnail
+        const thumbnailPath = `${user.id}/${Date.now()}_thumb.webp`;
+        const { data: thumbUpload, error: thumbError } = await supabase.storage
+          .from('videos-public')
+          .upload(thumbnailPath, thumbnailFile);
 
-      // Upload video file to storage - using the correct bucket name
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('videos-public')
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+        if (!thumbError) {
+          const { data: { publicUrl: thumbPublicUrl } } = supabase.storage
+            .from('videos-public')
+            .getPublicUrl(thumbnailPath);
+          thumbnailUrl = thumbPublicUrl;
+        }
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
+        // Get video duration
+        duration = await videoCompressionService.getVideoDuration(file);
+
+        // Compress videos in different qualities
+        for (let i = 0; i < COMPRESSION_QUALITIES.length; i++) {
+          const quality = COMPRESSION_QUALITIES[i];
+          const baseProgress = 20 + (i * 30);
+
+          try {
+            const compressedFile = await videoCompressionService.compressVideo(
+              file,
+              quality,
+              (compressionProgress) => {
+                setProgress({
+                  overall: baseProgress + (compressionProgress * 0.3),
+                  compression: compressionProgress,
+                  stage: 'compression'
+                });
+              }
+            );
+
+            // Upload compressed version
+            const compressedPath = `${user.id}/${Date.now()}${quality.suffix}.mp4`;
+            const { data: compressedUpload, error: compressedError } = await supabase.storage
+              .from('videos-public')
+              .upload(compressedPath, compressedFile);
+
+            if (!compressedError) {
+              const { data: { publicUrl } } = supabase.storage
+                .from('videos-public')
+                .getPublicUrl(compressedPath);
+              compressedUrls[`optimized_${quality.name}_url`] = publicUrl;
+            }
+          } catch (error) {
+            console.warn(`Failed to compress ${quality.name}:`, error);
+          }
+        }
       }
 
-      setProgress(50);
+      // Upload original file
+      setProgress({ overall: 85, stage: 'upload' });
+      const originalPath = `${user.id}/${Date.now()}.${file.name.split('.').pop()}`;
+      const { data: originalUpload, error: originalError } = await supabase.storage
+        .from('videos-public')
+        .upload(originalPath, file);
 
-      // Get public URL for the uploaded video
+      if (originalError) throw originalError;
+
       const { data: { publicUrl } } = supabase.storage
         .from('videos-public')
-        .getPublicUrl(fileName);
+        .getPublicUrl(originalPath);
+      originalFileUrl = publicUrl;
 
-      console.log('Video uploaded successfully, public URL:', publicUrl);
-
-      // Use provided spotId or default spot
+      // Save to database
+      setProgress({ overall: 95, stage: 'upload' });
       const finalSpotId = spotId || '123e4567-e89b-12d3-a456-426614174000';
 
-      // Save video metadata to database
-      const { data: videoData, error: dbError } = await supabase
+      const videoData = {
+        user_id: user.id,
+        title,
+        description: description || '',
+        video_url: originalFileUrl,
+        spot_id: finalSpotId,
+        duration: duration || null,
+        thumbnail_url: thumbnailUrl || null,
+        ...compressedUrls
+      };
+
+      const { data: savedVideo, error: dbError } = await supabase
         .from('videos')
-        .insert({
-          user_id: user.id,
-          title,
-          description: description || '',
-          video_url: publicUrl,
-          spot_id: finalSpotId,
-          duration: null, // Could be calculated from the video file
-          thumbnail_url: null // Could be generated from the video
-        })
+        .insert(videoData)
         .select()
         .single();
 
-      if (dbError) {
-        console.error('Database error:', dbError);
-        throw dbError;
-      }
+      if (dbError) throw dbError;
 
-      // Update user's last location preference if a location was selected
+      // Update user's last location preference
       if (spotId) {
         try {
           await supabase
@@ -84,19 +152,19 @@ export const useVideoUpload = () => {
             .eq('id', user.id);
         } catch (error) {
           console.error('Error updating user location preference:', error);
-          // Don't throw here as the video upload was successful
         }
       }
 
-      setProgress(100);
+      setProgress({ overall: 100, stage: 'complete' });
 
       toast({
         title: "Video uploaded successfully!",
-        description: "Your video has been uploaded and is now available.",
+        description: enableCompression 
+          ? "Your video has been optimized and uploaded."
+          : "Your video has been uploaded.",
       });
 
-      console.log('Video metadata saved:', videoData);
-      return videoData;
+      return savedVideo;
 
     } catch (error: any) {
       console.error('Error uploading video:', error);
@@ -108,7 +176,7 @@ export const useVideoUpload = () => {
       return null;
     } finally {
       setUploading(false);
-      setProgress(0);
+      setProgress({ overall: 0, stage: 'compression' });
     }
   };
 

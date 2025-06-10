@@ -8,13 +8,17 @@ import { useNavigate } from 'react-router-dom';
 import VideoCard from '@/components/VideoCard';
 import LocationSearch from '@/components/LocationSearch';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
+import { useVideoPreloader } from '@/hooks/useVideoPreloader';
+import { useNetworkQuality } from '@/hooks/useNetworkQuality';
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { selectedSpotId, updateLocationPreference, loading: locationLoading } = useLocationPreference();
+  const { optimalQuality } = useNetworkQuality();
 
   const {
     data,
@@ -45,7 +49,6 @@ const Home = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      // Filter by location if selected
       if (selectedSpotId) {
         query = query.eq('spot_id', selectedSpotId);
       }
@@ -61,7 +64,6 @@ const Home = () => {
         throw error;
       }
 
-      console.log('Fetched videos:', data);
       return data || [];
     },
     getNextPageParam: (lastPage) => {
@@ -70,6 +72,27 @@ const Home = () => {
     },
     initialPageParam: undefined,
   });
+
+  const allVideos = data?.pages.flatMap(page => page) || [];
+
+  // Preload videos based on current position
+  useVideoPreloader(allVideos, currentVideoIndex, optimalQuality);
+
+  // Track current video index based on scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      const videoHeight = window.innerHeight;
+      const newIndex = Math.round(scrollPosition / videoHeight);
+      
+      if (newIndex !== currentVideoIndex && newIndex < allVideos.length) {
+        setCurrentVideoIndex(newIndex);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [currentVideoIndex, allVideos.length]);
 
   // Refetch when location changes
   useEffect(() => {
@@ -106,8 +129,6 @@ const Home = () => {
     }
   };
 
-  const allVideos = data?.pages.flatMap(page => page) || [];
-
   if (isLoading || locationLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-black">
@@ -135,6 +156,11 @@ const Home = () => {
             placeholder="Search surf spots..."
             className="flex-1 max-w-xs"
           />
+          
+          {/* Network quality indicator */}
+          <div className="text-xs text-white/60 bg-black/50 px-2 py-1 rounded">
+            {optimalQuality}
+          </div>
         </div>
         
         <div className="relative max-w-md mx-auto">
