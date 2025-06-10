@@ -15,11 +15,13 @@ import { UploadProgress } from './UploadProgress';
 import { EncoderLoadingSpinner } from './EncoderLoadingSpinner';
 import { validateVideoFile, generateTitleFromFilename } from '@/utils/videoValidation';
 import { MAX_FILE_SIZE } from '@/constants/videoFormats';
+import LocationSearch from '@/components/LocationSearch';
 
 export const VideoUploadForm = () => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isEncoderLoading, setIsEncoderLoading] = useState(false);
   
@@ -137,7 +139,12 @@ export const VideoUploadForm = () => {
     }
 
     console.log('Starting video upload process');
-    const result = await uploadVideo(file, title.trim(), description.trim());
+    const result = await uploadVideo(
+      file, 
+      title.trim(), 
+      description.trim(), 
+      selectedSpotId || undefined
+    );
     
     if (result) {
       // Reset form
@@ -152,6 +159,7 @@ export const VideoUploadForm = () => {
     setFile(null);
     setTitle('');
     setDescription('');
+    setSelectedSpotId(null);
     setIsEncoderLoading(false);
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
@@ -187,6 +195,19 @@ export const VideoUploadForm = () => {
           onDescriptionChange={setDescription}
           disabled={uploading || isEncoderLoading}
         />
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Location</label>
+          <LocationSearch
+            selectedSpotId={selectedSpotId}
+            onLocationSelect={setSelectedSpotId}
+            placeholder="Search for surf spots..."
+            className="w-full"
+          />
+          <p className="text-xs text-muted-foreground">
+            Select a location for your video (optional)
+          </p>
+        </div>
 
         {uploading && <UploadProgress progress={progress} />}
 

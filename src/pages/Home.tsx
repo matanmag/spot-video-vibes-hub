@@ -5,40 +5,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 import VideoCard from '@/components/VideoCard';
-import LocationSelector from '@/components/LocationSelector';
+import LocationSearch from '@/components/LocationSearch';
+import { useLocationPreference } from '@/hooks/useLocationPreference';
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
   const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
-
-  // Load user's last location preference
-  useEffect(() => {
-    const loadUserLocationPreference = async () => {
-      if (user) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('last_spot_id')
-            .eq('id', user.id)
-            .maybeSingle();
-
-          if (profile?.last_spot_id) {
-            setSelectedSpotId(profile.last_spot_id);
-          }
-        } catch (error) {
-          console.error('Error loading user location preference:', error);
-        }
-      }
-    };
-
-    loadUserLocationPreference();
-  }, [user]);
+  const { selectedSpotId, updateLocationPreference, loading: locationLoading } = useLocationPreference();
 
   const {
     data,
@@ -132,7 +108,7 @@ const Home = () => {
 
   const allVideos = data?.pages.flatMap(page => page) || [];
 
-  if (isLoading) {
+  if (isLoading || locationLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-black">
         <div className="text-white text-lg">Loading videos...</div>
@@ -153,9 +129,11 @@ const Home = () => {
       {/* Top Bar with Search and Location */}
       <div className="absolute top-4 left-4 right-4 z-50">
         <div className="flex items-center justify-between mb-4">
-          <LocationSelector
+          <LocationSearch
             selectedSpotId={selectedSpotId}
-            onLocationChange={setSelectedSpotId}
+            onLocationSelect={updateLocationPreference}
+            placeholder="Search surf spots..."
+            className="flex-1 max-w-xs"
           />
         </div>
         
