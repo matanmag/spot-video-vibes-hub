@@ -5,6 +5,9 @@ import { SafeTestWrapper } from './components/SafeTestWrapper';
 import { AuthProvider } from './hooks/useAuth';
 import Index from './pages/Index';
 import Login from './pages/Login';
+import Home from './pages/Home';
+import Upload from './pages/Upload';
+import Profile from './pages/Profile';
 
 const DebugLocation = () => {
   const location = useLocation();
@@ -19,7 +22,7 @@ const DebugLocation = () => {
 };
 
 const App = () => {
-  console.log('🚀 App component rendering - Step 2: Adding Index page with AuthProvider and Login route');
+  console.log('🚀 App component rendering - Step 3: Adding all main routes with SafeTestWrapper');
   
   return (
     <AuthProvider>
@@ -44,13 +47,37 @@ const App = () => {
               } 
             />
             <Route 
+              path="/home" 
+              element={
+                <SafeTestWrapper componentName="Home">
+                  <Home />
+                </SafeTestWrapper>
+              } 
+            />
+            <Route 
+              path="/upload" 
+              element={
+                <SafeTestWrapper componentName="Upload">
+                  <Upload />
+                </SafeTestWrapper>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <SafeTestWrapper componentName="Profile">
+                  <Profile />
+                </SafeTestWrapper>
+              } 
+            />
+            <Route 
               path="*" 
               element={
                 <div>
                   <div>❓ Unknown route</div>
                   <div>Current pathname: "{window.location.pathname}"</div>
                   <div>Pathname length: {window.location.pathname.length}</div>
-                  <div>Available routes: ["/", "/login"]</div>
+                  <div>Available routes: ["/", "/login", "/home", "/upload", "/profile"]</div>
                 </div>
               } 
             />
