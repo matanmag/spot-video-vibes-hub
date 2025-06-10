@@ -5,13 +5,40 @@ import { supabase } from '@/integrations/supabase/client';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import VideoCard from '@/components/VideoCard';
+import LocationSelector from '@/components/LocationSelector';
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSpotId, setSelectedSpotId] = useState<string | null>(null);
   const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+
+  // Load user's last location preference
+  useEffect(() => {
+    const loadUserLocationPreference = async () => {
+      if (user) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('last_spot_id')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (profile?.last_spot_id) {
+            setSelectedSpotId(profile.last_spot_id);
+          }
+        } catch (error) {
+          console.error('Error loading user location preference:', error);
+        }
+      }
+    };
+
+    loadUserLocationPreference();
+  }, [user]);
 
   const {
     data,
@@ -19,11 +46,12 @@ const Home = () => {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    error
+    error,
+    refetch
   } = useInfiniteQuery({
-    queryKey: ['videos'],
+    queryKey: ['videos', selectedSpotId],
     queryFn: async ({ pageParam }) => {
-      console.log('Fetching videos with pageParam:', pageParam);
+      console.log('Fetching videos with pageParam:', pageParam, 'spotId:', selectedSpotId);
       
       let query = supabase
         .from('videos')
@@ -40,6 +68,11 @@ const Home = () => {
         `)
         .order('created_at', { ascending: false })
         .limit(10);
+
+      // Filter by location if selected
+      if (selectedSpotId) {
+        query = query.eq('spot_id', selectedSpotId);
+      }
 
       if (pageParam) {
         query = query.lt('created_at', pageParam);
@@ -61,6 +94,11 @@ const Home = () => {
     },
     initialPageParam: undefined,
   });
+
+  // Refetch when location changes
+  useEffect(() => {
+    refetch();
+  }, [selectedSpotId, refetch]);
 
   // Set up intersection observer for infinite scroll
   useEffect(() => {
@@ -112,8 +150,15 @@ const Home = () => {
 
   return (
     <div className="relative h-screen overflow-hidden bg-black pb-16">
-      {/* Floating Search Bar */}
-      <div className="absolute top-16 left-4 right-4 z-50">
+      {/* Top Bar with Search and Location */}
+      <div className="absolute top-4 left-4 right-4 z-50">
+        <div className="flex items-center justify-between mb-4">
+          <LocationSelector
+            selectedSpotId={selectedSpotId}
+            onLocationChange={setSelectedSpotId}
+          />
+        </div>
+        
         <div className="relative max-w-md mx-auto">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
@@ -128,13 +173,26 @@ const Home = () => {
       </div>
 
       {/* Video Feed */}
-      <div className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide">
-        {allVideos.map((video, index) => (
-          <VideoCard
-            key={`${video.id}-${index}`}
-            video={video}
-          />
-        ))}
+      <div className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide pt-24">
+        {allVideos.length === 0 ? (
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center text-white/60">
+              <p className="text-lg mb-2">No videos found</p>
+              {selectedSpotId ? (
+                <p className="text-sm">Try selecting a different location or browse all locations</p>
+              ) : (
+                <p className="text-sm">Be the first to upload a video!</p>
+              )}
+            </div>
+          </div>
+        ) : (
+          allVideos.map((video, index) => (
+            <VideoCard
+              key={`${video.id}-${index}`}
+              video={video}
+            />
+          ))
+        )}
         
         {/* Load more trigger */}
         <div ref={loadMoreRef} className="h-20 flex items-center justify-center">

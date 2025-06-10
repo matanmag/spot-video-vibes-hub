@@ -50,21 +50,32 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          last_spot_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           email?: string | null
           id: string
+          last_spot_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: string
+          last_spot_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_last_spot_id_fkey"
+            columns: ["last_spot_id"]
+            isOneToOne: false
+            referencedRelation: "spots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       spots: {
         Row: {

@@ -10,7 +10,7 @@ export const useVideoUpload = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const uploadVideo = async (file: File, title: string, description?: string) => {
+  const uploadVideo = async (file: File, title: string, description?: string, spotId?: string) => {
     if (!user) {
       toast({
         title: "Authentication required",
@@ -52,8 +52,8 @@ export const useVideoUpload = () => {
 
       console.log('Video uploaded successfully, public URL:', publicUrl);
 
-      // For now, we'll use a default spot_id. In a real app, this would be selected by the user
-      const defaultSpotId = '123e4567-e89b-12d3-a456-426614174000'; // This would need to exist in the spots table
+      // Use provided spotId or default spot
+      const finalSpotId = spotId || '123e4567-e89b-12d3-a456-426614174000';
 
       // Save video metadata to database
       const { data: videoData, error: dbError } = await supabase
@@ -63,7 +63,7 @@ export const useVideoUpload = () => {
           title,
           description: description || '',
           video_url: publicUrl,
-          spot_id: defaultSpotId, // This should be selected by user in a real app
+          spot_id: finalSpotId,
           duration: null, // Could be calculated from the video file
           thumbnail_url: null // Could be generated from the video
         })
@@ -73,6 +73,19 @@ export const useVideoUpload = () => {
       if (dbError) {
         console.error('Database error:', dbError);
         throw dbError;
+      }
+
+      // Update user's last location preference if a location was selected
+      if (spotId) {
+        try {
+          await supabase
+            .from('profiles')
+            .update({ last_spot_id: spotId })
+            .eq('id', user.id);
+        } catch (error) {
+          console.error('Error updating user location preference:', error);
+          // Don't throw here as the video upload was successful
+        }
       }
 
       setProgress(100);
