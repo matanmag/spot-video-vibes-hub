@@ -87,6 +87,7 @@ export type Database = {
           longitude: number
           msw_id: number | null
           name: string
+          type: string | null
           updated_at: string
         }
         Insert: {
@@ -98,6 +99,7 @@ export type Database = {
           longitude: number
           msw_id?: number | null
           name: string
+          type?: string | null
           updated_at?: string
         }
         Update: {
@@ -109,6 +111,7 @@ export type Database = {
           longitude?: number
           msw_id?: number | null
           name?: string
+          type?: string | null
           updated_at?: string
         }
         Relationships: []

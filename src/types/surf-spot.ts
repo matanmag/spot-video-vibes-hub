@@ -7,6 +7,7 @@ export interface SurfSpot {
   longitude: number;
   description?: string;
   msw_id?: number;
+  type?: string;
   created_at: string;
   updated_at: string;
 }
