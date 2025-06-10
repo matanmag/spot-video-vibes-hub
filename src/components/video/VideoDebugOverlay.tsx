@@ -35,7 +35,7 @@ export const VideoDebugOverlay = ({
       <div>Playing: {isPlaying ? 'Yes' : 'No'}</div>
       <div>Mobile: {isMobile ? 'Yes' : 'No'}</div>
       <div>User Interaction: {hasUserInteracted ? 'Yes' : 'No'}</div>
-      <div>Load Attempts: {loadAttements}</div>
+      <div>Load Attempts: {loadAttempts}</div>
     </div>
   );
 };
