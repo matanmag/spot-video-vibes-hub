@@ -38,7 +38,7 @@ export const uploadVideoFiles = async (
       throw new Error(`Failed to upload video: ${originalError.message}`);
     }
 
-    // Upload preview video (for now, same as original)
+    // Upload preview video
     const { data: previewUpload, error: previewError } = await supabase.storage
       .from('videos-public')
       .upload(previewFileName, previewBlob, {
@@ -77,7 +77,15 @@ export const uploadVideoFiles = async (
       .from('thumbnails-public')
       .getPublicUrl(thumbnailFileName);
 
-    console.log('Files uploaded successfully:', { originalUrl, optimizedUrl, thumbnailUrl });
+    console.log('Generated URLs:', { originalUrl, optimizedUrl, thumbnailUrl });
+
+    // Verify URLs are accessible
+    try {
+      const testResponse = await fetch(originalUrl, { method: 'HEAD' });
+      console.log('Original URL test:', testResponse.status, testResponse.ok);
+    } catch (error) {
+      console.error('Error testing original URL:', error);
+    }
 
     return { originalUrl, optimizedUrl, thumbnailUrl };
   } catch (error) {

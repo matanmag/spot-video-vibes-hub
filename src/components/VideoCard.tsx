@@ -9,6 +9,7 @@ interface Video {
   title: string;
   description?: string;
   video_url: string;
+  optimized_url?: string;
   thumbnail_url?: string;
   duration?: number;
   views?: number;
@@ -29,6 +30,12 @@ interface VideoCardProps {
 
 const VideoCard = ({ video }: VideoCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  console.log('Rendering VideoCard for:', video.title, {
+    video_url: video.video_url,
+    optimized_url: video.optimized_url,
+    thumbnail_url: video.thumbnail_url
+  });
 
   return (
     <div
