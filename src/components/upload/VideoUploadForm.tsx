@@ -13,6 +13,7 @@ import { VideoPreview } from './VideoPreview';
 import { VideoDetailsForm } from './VideoDetailsForm';
 import { UploadProgress } from './UploadProgress';
 import { EncoderLoadingSpinner } from './EncoderLoadingSpinner';
+import { CompressionSettings } from './CompressionSettings';
 import { validateVideoFile, generateTitleFromFilename } from '@/utils/videoValidation';
 import { MAX_FILE_SIZE } from '@/constants/videoFormats';
 import LocationSearch from '@/components/LocationSearch';
