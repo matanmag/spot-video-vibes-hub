@@ -4,16 +4,38 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
+  console.log('🏠 Index page rendering');
+  
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  console.log('🏠 Index page state:', { 
+    hasUser: !!user, 
+    userEmail: user?.email || 'No user', 
+    loading 
+  });
 
   const handleGetStarted = () => {
+    console.log('🏠 Get Started clicked');
     if (user) {
+      console.log('🏠 User authenticated, navigating to home');
       navigate('/home');
     } else {
+      console.log('🏠 No user, navigating to login');
       navigate('/login');
     }
   };
+
+  if (loading) {
+    console.log('🏠 Index page showing loading state');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  console.log('🏠 Index page rendering main content');
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">

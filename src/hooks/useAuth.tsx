@@ -14,17 +14,23 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  console.log('🔐 AuthProvider initializing');
+  
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('Setting up auth state listener');
+    console.log('🔐 Setting up auth state listener');
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        console.log('🔐 Auth state changed:', { 
+          event, 
+          userEmail: session?.user?.email || 'No user',
+          hasSession: !!session
+        });
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -33,14 +39,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
+      console.log('🔐 Initial session check:', { 
+        userEmail: session?.user?.email || 'No user',
+        hasSession: !!session
+      });
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => {
-      console.log('Cleaning up auth listener');
+      console.log('🔐 Cleaning up auth listener');
       subscription.unsubscribe();
     };
   }, []);
@@ -49,7 +58,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       // Use the current origin for redirect URL
       const redirectUrl = `${window.location.origin}/home`;
-      console.log('Signing in with redirect URL:', redirectUrl);
+      console.log('🔐 Signing in with redirect URL:', redirectUrl);
       
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -59,22 +68,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       
       if (error) {
-        console.error('Sign in error:', error);
+        console.error('🔐 Sign in error:', error);
+      } else {
+        console.log('🔐 Sign in successful, magic link sent');
       }
       
       return { error };
     } catch (error) {
-      console.error('Unexpected error during sign in:', error);
+      console.error('🔐 Unexpected error during sign in:', error);
       return { error };
     }
   };
 
   const signOut = async () => {
     try {
-      console.log('Signing out user');
+      console.log('🔐 Signing out user');
       await supabase.auth.signOut();
+      console.log('🔐 Sign out successful');
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error('🔐 Sign out error:', error);
     }
   };
 
@@ -85,6 +97,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signInWithEmail,
     signOut,
   };
+
+  console.log('🔐 AuthProvider rendering with state:', {
+    hasUser: !!user,
+    userEmail: user?.email || 'No user',
+    loading
+  });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
