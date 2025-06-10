@@ -4,6 +4,7 @@ interface Video {
   title: string;
   description?: string;
   created_at: string;
+  views?: number;
   spots?: {
     name: string;
     latitude: number;
@@ -30,6 +31,12 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
+  const formatViews = (views: number = 0) => {
+    if (views < 1000) return `${views} views`;
+    if (views < 1000000) return `${(views / 1000).toFixed(1)}K views`;
+    return `${(views / 1000000).toFixed(1)}M views`;
+  };
+
   return (
     <div className="flex-1 mr-4 text-white">
       <div className="mb-2">
@@ -41,6 +48,8 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
           <span>@{video.profiles?.email?.split('@')[0] || 'user'}</span>
           <span>•</span>
           <span>{formatTimeAgo(video.created_at)}</span>
+          <span>•</span>
+          <span>{formatViews(video.views)}</span>
           {video.spots && (
             <>
               <span>•</span>

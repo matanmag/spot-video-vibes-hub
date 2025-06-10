@@ -1,5 +1,6 @@
 
 import { useEffect, useRef, useState } from 'react';
+import { useVideoViews } from '@/hooks/useVideoViews';
 
 interface Video {
   id: string;
@@ -17,6 +18,7 @@ const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isInView, setIsInView] = useState(false);
+  const { trackView } = useVideoViews(video.id);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -26,6 +28,9 @@ const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
         
         if (videoRef.current) {
           if (entry.isIntersecting) {
+            // Track view when video becomes visible and starts playing
+            trackView();
+            
             videoRef.current.play().then(() => {
               setIsPlaying(true);
             }).catch((error) => {
@@ -51,7 +56,7 @@ const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
         observer.unobserve(containerRef.current);
       }
     };
-  }, [containerRef]);
+  }, [containerRef, trackView]);
 
   const handleVideoClick = () => {
     if (videoRef.current) {

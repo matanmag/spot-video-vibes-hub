@@ -11,6 +11,7 @@ interface Video {
   video_url: string;
   thumbnail_url?: string;
   duration?: number;
+  views?: number;
   created_at: string;
   spots?: {
     name: string;
