@@ -151,6 +151,7 @@ export type Database = {
           description: string | null
           duration: number | null
           id: string
+          optimized_url: string | null
           spot_id: string
           thumbnail_url: string | null
           title: string
@@ -164,6 +165,7 @@ export type Database = {
           description?: string | null
           duration?: number | null
           id?: string
+          optimized_url?: string | null
           spot_id: string
           thumbnail_url?: string | null
           title: string
@@ -177,6 +179,7 @@ export type Database = {
           description?: string | null
           duration?: number | null
           id?: string
+          optimized_url?: string | null
           spot_id?: string
           thumbnail_url?: string | null
           title?: string
