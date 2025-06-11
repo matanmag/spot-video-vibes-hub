@@ -1,18 +1,10 @@
 
-import { useEffect, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { useVideoViews } from '@/hooks/useVideoViews';
-import { useMobileDetection } from '@/hooks/useMobileDetection';
-import { useUserInteraction } from '@/hooks/useUserInteraction';
-import { useMobileIntersectionObserver } from '@/hooks/useMobileIntersectionObserver';
-import { useVideoState } from '@/hooks/useVideoState';
-import { useVideoEventHandlers } from '@/hooks/useVideoEventHandlers';
-import { useVideoPlayback } from '@/hooks/useVideoPlayback';
-import { MobileVideoLoader } from './mobile/MobileVideoLoader';
-import { MobileVideoControls } from './mobile/MobileVideoControls';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { VideoDebugOverlay } from './video/VideoDebugOverlay';
 import { VideoLoadingStates } from './video/VideoLoadingStates';
 import { VideoErrorState } from './video/VideoErrorState';
-import { VideoDebugOverlay } from './video/VideoDebugOverlay';
-import { VideoPlayIndicator } from './video/VideoPlayIndicator';
 
 interface Video {
   id: string;
@@ -28,211 +20,122 @@ interface VideoPlayerProps {
 }
 
 const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { trackView } = useVideoViews(video.id);
-  const { isMobile, isTouch } = useMobileDetection();
-  const { hasUserInteracted, triggerInteraction } = useUserInteraction();
+  
+  // Simplified state management
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [debugInfo, setDebugInfo] = useState('Initializing...');
+  const [hasTrackedView, setHasTrackedView] = useState(false);
 
-  // Video state management
-  const {
-    isPlaying,
-    setIsPlaying,
-    isReady,
-    setIsReady,
-    hasSource,
-    setHasSource,
-    hasError,
-    setHasError,
-    isMuted,
-    setIsMuted,
-    showMobileControls,
-    setShowMobileControls,
-    debugInfo,
-    updateDebugInfo,
-    loadAttempts,
-    setLoadAttempts
-  } = useVideoState(video);
+  // Get optimized video URL (prioritize H.264 MP4)
+  const getOptimizedVideoUrl = useCallback(() => {
+    const url = video.optimized_url || video.video_url;
+    console.log(`Using video URL: ${url} for ${video.title}`);
+    return url;
+  }, [video.optimized_url, video.video_url, video.title]);
+
+  const updateDebugInfo = useCallback((info: string) => {
+    const timestamp = new Date().toISOString().split('T')[1];
+    console.log(`[${timestamp}] VideoPlayer ${video.title}: ${info}`);
+    setDebugInfo(info);
+  }, [video.title]);
+
+  // Intersection Observer for lazy loading
+  const isInView = useIntersectionObserver({
+    elementRef: containerRef,
+    threshold: 0.5,
+    onIntersect: (isVisible) => {
+      updateDebugInfo(`In view: ${isVisible}`);
+    }
+  });
 
   // Video event handlers
-  const {
-    handleCanPlay,
-    handleLoadedData,
-    handleLoadedMetadata,
-    handleError,
-    handleLoadStart,
-    handleWaiting,
-    handleStalled
-  } = useVideoEventHandlers({
-    updateDebugInfo,
-    setIsReady,
-    setHasError
-  });
-
-  // Video playback controls
-  const {
-    videoRef,
-    handlePlayVideo,
-    handlePauseVideo,
-    handleToggleMute
-  } = useVideoPlayback({
-    isReady,
-    hasError,
-    isMobile,
-    hasUserInteracted,
-    isMuted,
-    setIsPlaying,
-    setShowMobileControls,
-    setIsMuted,
-    updateDebugInfo,
-    trackView
-  });
-
-  // Mobile-optimized intersection observer
-  const isInView = useMobileIntersectionObserver({
-    containerRef,
-    onVisibilityChange: (isVisible, ratio) => {
-      updateDebugInfo(`In view: ${isVisible} (ratio: ${ratio.toFixed(2)})`);
-      
-      // On mobile, show controls when video comes into view
-      if (isMobile && isVisible && !isPlaying) {
-        setShowMobileControls(true);
-      } else if (!isVisible) {
-        setShowMobileControls(false);
-      }
-    }
-  });
-
-  // Mobile video loader
-  const { loadVideoForMobile } = MobileVideoLoader({
-    videoElement: videoRef.current,
-    videoUrl: video.optimized_url || video.video_url,
-    onLoadSuccess: () => {
-      setHasSource(true);
-      setIsReady(true);
-      setHasError(false);
-      setLoadAttempts(0);
-    },
-    onLoadError: (error) => {
-      setHasError(true);
-      setIsReady(false);
-      updateDebugInfo(`Load error: ${error}`);
-      
-      // Retry logic for mobile
-      if (isMobile && loadAttempts < 2) {
-        setTimeout(() => {
-          setLoadAttempts(prev => prev + 1);
-          updateDebugInfo(`Retrying load (attempt ${loadAttempts + 2})`);
-        }, 1000);
-      }
-    },
-    onDebugUpdate: updateDebugInfo
-  });
-
-  const handleVideoInteraction = useCallback(() => {
-    triggerInteraction();
-    
-    if (isMobile && !isPlaying && isReady && !hasError) {
-      handlePlayVideo();
-    } else if (isPlaying) {
-      handlePauseVideo();
-    } else if (!isPlaying) {
-      handlePlayVideo();
-    }
-  }, [triggerInteraction, isMobile, isPlaying, isReady, hasError, handlePlayVideo, handlePauseVideo]);
-
-  const handleRetry = useCallback(() => {
+  const handleCanPlay = useCallback(() => {
+    updateDebugInfo('Video ready to play');
+    setIsReady(true);
     setHasError(false);
-    setLoadAttempts(0);
-    loadVideoForMobile();
-  }, [loadVideoForMobile, setHasError, setLoadAttempts]);
+  }, [updateDebugInfo]);
+
+  const handlePlay = useCallback(() => {
+    updateDebugInfo('Video started playing');
+    setIsPlaying(true);
+    
+    // Track view only once when video actually starts playing
+    if (!hasTrackedView) {
+      trackView();
+      setHasTrackedView(true);
+    }
+  }, [updateDebugInfo, trackView, hasTrackedView]);
+
+  const handlePause = useCallback(() => {
+    updateDebugInfo('Video paused');
+    setIsPlaying(false);
+  }, [updateDebugInfo]);
+
+  const handleError = useCallback((e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+    const error = e.currentTarget.error;
+    const errorMessage = error ? `Code ${error.code}: ${error.message}` : 'Unknown error';
+    console.error('Video error:', error);
+    updateDebugInfo(`Error: ${errorMessage}`);
+    setHasError(true);
+    setIsReady(false);
+  }, [updateDebugInfo]);
+
+  const handleLoadStart = useCallback(() => {
+    updateDebugInfo('Video loading started');
+    setHasError(false);
+  }, [updateDebugInfo]);
+
+  const handleWaiting = useCallback(() => {
+    updateDebugInfo('Video buffering...');
+  }, [updateDebugInfo]);
+
+  const handleLoadedData = useCallback(() => {
+    updateDebugInfo('Video data loaded');
+  }, [updateDebugInfo]);
 
   // Load video when in view
   useEffect(() => {
-    if (isInView && !hasSource && !hasError) {
-      if (isMobile) {
-        loadVideoForMobile();
-      } else {
-        // Desktop loading logic (existing)
-        const videoElement = videoRef.current;
-        if (!videoElement) return;
+    const videoElement = videoRef.current;
+    if (!videoElement || !isInView) return;
 
-        const videoUrl = video.optimized_url || video.video_url;
-        updateDebugInfo(`Setting video source: ${videoUrl}`);
-        
-        fetch(videoUrl, { method: 'HEAD' })
-          .then(response => {
-            if (response.ok) {
-              videoElement.src = videoUrl;
-              videoElement.load();
-              setHasSource(true);
-              setHasError(false);
-              updateDebugInfo('Video source set and loading...');
-            } else {
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-          })
-          .catch(error => {
-            console.error(`Failed to load video URL ${videoUrl}:`, error);
-            updateDebugInfo(`URL test failed: ${error.message}`);
-            setHasError(true);
-          });
-      }
+    const videoUrl = getOptimizedVideoUrl();
+    if (videoElement.src !== videoUrl) {
+      updateDebugInfo(`Loading video: ${videoUrl}`);
+      videoElement.src = videoUrl;
+      videoElement.load();
     }
-  }, [isInView, video.optimized_url, video.video_url, hasSource, hasError, isMobile, loadVideoForMobile, updateDebugInfo, setHasSource, setHasError]);
+  }, [isInView, getOptimizedVideoUrl, updateDebugInfo]);
 
-  // Auto-play when ready and in view (for desktop or after user interaction on mobile)
-  useEffect(() => {
-    if (isInView && isReady && !hasError) {
-      if (!isMobile || hasUserInteracted) {
-        handlePlayVideo();
-      }
-    } else if (!isInView && isPlaying) {
-      handlePauseVideo();
+  const handleRetry = useCallback(() => {
+    const videoElement = videoRef.current;
+    if (videoElement) {
+      updateDebugInfo('Retrying video load...');
+      setHasError(false);
+      setIsReady(false);
+      videoElement.load();
     }
-  }, [isInView, isReady, hasError, isMobile, hasUserInteracted, isPlaying, handlePlayVideo, handlePauseVideo]);
-
-  // Retry loading on mobile
-  useEffect(() => {
-    if (isMobile && hasError && loadAttempts > 0 && loadAttempts <= 2) {
-      const timer = setTimeout(() => {
-        setHasError(false);
-        setIsReady(false);
-        setHasSource(false);
-        loadVideoForMobile();
-      }, 1000 * loadAttempts);
-
-      return () => clearTimeout(timer);
-    }
-  }, [loadAttempts, hasError, isMobile, loadVideoForMobile, setHasError, setIsReady, setHasSource]);
-
-  // Hide mobile controls after inactivity
-  useEffect(() => {
-    if (!isMobile || !showMobileControls) return;
-
-    const timer = setTimeout(() => {
-      if (isPlaying) {
-        setShowMobileControls(false);
-      }
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [showMobileControls, isPlaying, isMobile, setShowMobileControls]);
+  }, [updateDebugInfo]);
 
   return (
     <>
-      {/* Debug overlay */}
+      {/* Debug overlay - only in development */}
       <VideoDebugOverlay
         debugInfo={debugInfo}
         isReady={isReady}
         hasError={hasError}
         isInView={isInView}
-        hasSource={hasSource}
+        hasSource={!!getOptimizedVideoUrl()}
         isPlaying={isPlaying}
-        isMobile={isMobile}
-        hasUserInteracted={hasUserInteracted}
-        loadAttempts={loadAttempts}
+        isMobile={false}
+        hasUserInteracted={true}
+        loadAttempts={0}
       />
 
-      {/* Thumbnail placeholder */}
+      {/* Loading states - show thumbnail until ready */}
       <VideoLoadingStates
         isReady={isReady}
         hasError={hasError}
@@ -242,53 +145,32 @@ const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
       {/* Error state */}
       <VideoErrorState
         hasError={hasError}
-        isMobile={isMobile}
+        isMobile={false}
         debugInfo={debugInfo}
         onRetry={handleRetry}
       />
 
-      {/* Mobile Video Controls */}
-      {isMobile && (
-        <MobileVideoControls
-          isPlaying={isPlaying}
-          isMuted={isMuted}
-          showControls={showMobileControls}
-          onPlayPause={handleVideoInteraction}
-          onToggleMute={handleToggleMute}
-          onInteraction={handleVideoInteraction}
-        />
-      )}
-
-      {/* Video Element */}
+      {/* Video Element with native autoplay */}
       <video
         ref={videoRef}
-        className="h-full w-full object-cover cursor-pointer"
-        preload={isMobile ? "none" : "metadata"}
-        muted={isMuted}
-        playsInline
+        className="h-full w-full object-cover"
+        autoPlay
+        muted
         loop
+        playsInline
+        preload="auto"
         poster={video.thumbnail_url}
-        onClick={handleVideoInteraction}
         onCanPlay={handleCanPlay}
-        onLoadedData={handleLoadedData}
-        onLoadedMetadata={handleLoadedMetadata}
+        onPlay={handlePlay}
+        onPause={handlePause}
         onError={handleError}
         onLoadStart={handleLoadStart}
         onWaiting={handleWaiting}
-        onStalled={handleStalled}
+        onLoadedData={handleLoadedData}
         crossOrigin="anonymous"
         style={{
           WebkitPlaysinline: true,
         } as React.CSSProperties}
-      />
-
-      {/* Desktop Play/Pause indicator */}
-      <VideoPlayIndicator
-        isMobile={isMobile}
-        isPlaying={isPlaying}
-        isInView={isInView}
-        isReady={isReady}
-        hasError={hasError}
       />
     </>
   );

@@ -18,9 +18,6 @@ export const VideoDebugOverlay = ({
   isInView,
   hasSource,
   isPlaying,
-  isMobile,
-  hasUserInteracted,
-  loadAttempts
 }: VideoDebugOverlayProps) => {
   // Only show in development
   if (process.env.NODE_ENV !== 'development') return null;
@@ -33,9 +30,8 @@ export const VideoDebugOverlay = ({
       <div>In View: {isInView ? 'Yes' : 'No'}</div>
       <div>Has Source: {hasSource ? 'Yes' : 'No'}</div>
       <div>Playing: {isPlaying ? 'Yes' : 'No'}</div>
-      <div>Mobile: {isMobile ? 'Yes' : 'No'}</div>
-      <div>User Interaction: {hasUserInteracted ? 'Yes' : 'No'}</div>
-      <div>Load Attempts: {loadAttempts}</div>
+      <div>Autoplay: Native</div>
+      <div>Preload: Auto</div>
     </div>
   );
 };
