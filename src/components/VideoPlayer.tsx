@@ -1,7 +1,10 @@
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useVideoViews } from '@/hooks/useVideoViews';
-import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { useVideoPlayerState } from '@/hooks/useVideoPlayerState';
+import { useVideoPlayerEventHandlers } from '@/hooks/useVideoPlayerEventHandlers';
+import { useVideoUrl } from '@/hooks/useVideoUrl';
+import { useVideoIntersectionLoader } from '@/hooks/useVideoIntersectionLoader';
 import { VideoDebugOverlay } from './video/VideoDebugOverlay';
 import { VideoLoadingStates } from './video/VideoLoadingStates';
 import { VideoErrorState } from './video/VideoErrorState';
@@ -20,95 +23,50 @@ interface VideoPlayerProps {
 }
 
 const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const { trackView } = useVideoViews(video.id);
   
-  // Simplified state management
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [debugInfo, setDebugInfo] = useState('Initializing...');
-  const [hasTrackedView, setHasTrackedView] = useState(false);
+  // State management
+  const {
+    isPlaying,
+    setIsPlaying,
+    isReady,
+    setIsReady,
+    hasError,
+    setHasError,
+    debugInfo,
+    updateDebugInfo,
+    hasTrackedView,
+    setHasTrackedView
+  } = useVideoPlayerState(video.title);
 
-  // Get optimized video URL (prioritize H.264 MP4)
-  const getOptimizedVideoUrl = useCallback(() => {
-    const url = video.optimized_url || video.video_url;
-    console.log(`Using video URL: ${url} for ${video.title}`);
-    return url;
-  }, [video.optimized_url, video.video_url, video.title]);
+  // Video URL optimization
+  const { getOptimizedVideoUrl } = useVideoUrl(video);
 
-  const updateDebugInfo = useCallback((info: string) => {
-    const timestamp = new Date().toISOString().split('T')[1];
-    console.log(`[${timestamp}] VideoPlayer ${video.title}: ${info}`);
-    setDebugInfo(info);
-  }, [video.title]);
-
-  // Intersection Observer for lazy loading
-  const isInView = useIntersectionObserver({
-    elementRef: containerRef,
-    threshold: 0.5,
-    onIntersect: (isVisible) => {
-      updateDebugInfo(`In view: ${isVisible}`);
-    }
+  // Event handlers
+  const {
+    handleCanPlay,
+    handlePlay,
+    handlePause,
+    handleError,
+    handleLoadStart,
+    handleWaiting,
+    handleLoadedData
+  } = useVideoPlayerEventHandlers({
+    updateDebugInfo,
+    setIsReady,
+    setHasError,
+    setIsPlaying,
+    trackView,
+    hasTrackedView,
+    setHasTrackedView
   });
 
-  // Video event handlers
-  const handleCanPlay = useCallback(() => {
-    updateDebugInfo('Video ready to play');
-    setIsReady(true);
-    setHasError(false);
-  }, [updateDebugInfo]);
-
-  const handlePlay = useCallback(() => {
-    updateDebugInfo('Video started playing');
-    setIsPlaying(true);
-    
-    // Track view only once when video actually starts playing
-    if (!hasTrackedView) {
-      trackView();
-      setHasTrackedView(true);
-    }
-  }, [updateDebugInfo, trackView, hasTrackedView]);
-
-  const handlePause = useCallback(() => {
-    updateDebugInfo('Video paused');
-    setIsPlaying(false);
-  }, [updateDebugInfo]);
-
-  const handleError = useCallback((e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-    const error = e.currentTarget.error;
-    const errorMessage = error ? `Code ${error.code}: ${error.message}` : 'Unknown error';
-    console.error('Video error:', error);
-    updateDebugInfo(`Error: ${errorMessage}`);
-    setHasError(true);
-    setIsReady(false);
-  }, [updateDebugInfo]);
-
-  const handleLoadStart = useCallback(() => {
-    updateDebugInfo('Video loading started');
-    setHasError(false);
-  }, [updateDebugInfo]);
-
-  const handleWaiting = useCallback(() => {
-    updateDebugInfo('Video buffering...');
-  }, [updateDebugInfo]);
-
-  const handleLoadedData = useCallback(() => {
-    updateDebugInfo('Video data loaded');
-  }, [updateDebugInfo]);
-
-  // Load video when in view
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    if (!videoElement || !isInView) return;
-
-    const videoUrl = getOptimizedVideoUrl();
-    if (videoElement.src !== videoUrl) {
-      updateDebugInfo(`Loading video: ${videoUrl}`);
-      videoElement.src = videoUrl;
-      videoElement.load();
-    }
-  }, [isInView, getOptimizedVideoUrl, updateDebugInfo]);
+  // Intersection observer and video loading
+  const { videoRef, isInView } = useVideoIntersectionLoader({
+    containerRef,
+    getOptimizedVideoUrl,
+    updateDebugInfo
+  });
 
   const handleRetry = useCallback(() => {
     const videoElement = videoRef.current;
@@ -118,7 +76,7 @@ const VideoPlayer = ({ video, containerRef }: VideoPlayerProps) => {
       setIsReady(false);
       videoElement.load();
     }
-  }, [updateDebugInfo]);
+  }, [updateDebugInfo, setHasError, setIsReady]);
 
   return (
     <>
