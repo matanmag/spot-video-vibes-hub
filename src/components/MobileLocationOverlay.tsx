@@ -39,12 +39,10 @@ const MobileLocationOverlay = ({
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose]);
 
@@ -58,15 +56,15 @@ const MobileLocationOverlay = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-md">
-      {/* Overlay background - click to close */}
+    <>
+      {/* Background overlay - positioned to start below the search bar */}
       <div 
-        className="absolute inset-0" 
+        className="fixed inset-x-0 top-[76px] bottom-0 z-30 bg-background/95 backdrop-blur-md"
         onClick={onClose}
       />
       
-      {/* Content */}
-      <div className="relative h-full overflow-y-auto">
+      {/* Content - positioned below the search bar */}
+      <div className="fixed inset-x-0 top-[76px] bottom-0 z-40 overflow-y-auto">
         <div className="p-4 space-y-6">
           
           {/* Use Current Location */}
@@ -181,7 +179,7 @@ const MobileLocationOverlay = ({
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

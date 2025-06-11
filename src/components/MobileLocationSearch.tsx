@@ -76,7 +76,7 @@ const MobileLocationSearch = ({
 
   return (
     <>
-      <div className="w-full bg-background/95 backdrop-blur-md border-b border-border/20 sticky top-0 z-40">
+      <div className="w-full bg-background/95 backdrop-blur-md border-b border-border/20 sticky top-0 z-50">
         <div className="px-4 py-3">
           <div className="relative">
             <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
@@ -90,20 +90,20 @@ const MobileLocationSearch = ({
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onFocus={handleFocus}
-              className="w-full h-12 pl-12 pr-12 rounded-full bg-muted/50 border border-border/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-200"
+              className="w-full h-12 pl-12 pr-12 rounded-full bg-muted/50 border border-border/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-200 relative z-10"
             />
             
             {(searchValue || selectedSpotName) && (
               <button
                 onClick={handleClear}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 z-10 p-1 rounded-full hover:bg-muted transition-colors duration-200"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 z-20 p-1 rounded-full hover:bg-muted transition-colors duration-200"
               >
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
             )}
             
             {isLoading && (
-              <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
+              <div className="absolute right-12 top-1/2 transform -translate-y-1/2 z-20">
                 <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
               </div>
             )}
