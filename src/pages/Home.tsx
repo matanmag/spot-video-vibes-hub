@@ -1,15 +1,17 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import VideoCard from '@/components/VideoCard';
-import SearchBar from '@/components/SearchBar';
+import MobileLocationSearch from '@/components/MobileLocationSearch';
+import VideoSkeletonList from '@/components/VideoSkeletonList';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
 
 const Home = () => {
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { selectedSpotId, updateLocationPreference, loading: locationLoading } = useLocationPreference();
+  const [isLocationChanging, setIsLocationChanging] = useState(false);
 
   const {
     data,
@@ -66,6 +68,17 @@ const Home = () => {
     initialPageParam: undefined,
   });
 
+  // Handle location preference updates with loading state
+  const handleLocationChange = async (spotId: string | null, spotName?: string) => {
+    setIsLocationChanging(true);
+    updateLocationPreference(spotId);
+    
+    // Add a small delay to show the loading state
+    setTimeout(() => {
+      setIsLocationChanging(false);
+    }, 500);
+  };
+
   // Refetch when location changes
   useEffect(() => {
     refetch();
@@ -96,68 +109,83 @@ const Home = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const allVideos = data?.pages.flatMap(page => page) || [];
+  const isInitialLoading = isLoading || locationLoading;
+  const showSkeletons = isInitialLoading || isLocationChanging;
 
   console.log('Current state:', { 
-    isLoading, 
+    isInitialLoading, 
+    isLocationChanging,
     locationLoading, 
     error, 
     videosCount: allVideos.length,
     selectedSpotId 
   });
 
-  if (isLoading || locationLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="text-foreground text-lg">Loading videos...</div>
-      </div>
-    );
-  }
-
   if (error) {
     console.error('Home page error:', error);
     return (
-      <div className="h-screen flex items-center justify-center bg-background">
-        <div className="text-destructive text-lg">Error loading videos: {error.message}</div>
+      <div className="h-screen flex flex-col bg-background">
+        <MobileLocationSearch
+          selectedSpotId={selectedSpotId}
+          onLocationSelect={handleLocationChange}
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-destructive text-lg">Error loading videos: {error.message}</div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="relative bg-background">
-      {/* Search Bar Overlay */}
-      <SearchBar
+      {/* Mobile Location Search Bar */}
+      <MobileLocationSearch
         selectedSpotId={selectedSpotId}
-        onLocationSelect={updateLocationPreference}
+        onLocationSelect={handleLocationChange}
+        isLoading={isLocationChanging}
       />
 
-      {/* Video Feed with Snap Scrolling */}
-      <div className="snap-container scrollbar-hide">
-        {allVideos.length === 0 ? (
-          <div className="snap-item flex items-center justify-center">
-            <div className="text-center text-muted-foreground">
-              <p className="text-lg mb-2">No videos found</p>
-              {selectedSpotId ? (
-                <p className="text-sm">Try selecting a different location or browse all locations</p>
-              ) : (
-                <p className="text-sm">Be the first to upload a video!</p>
-              )}
+      {/* Video Feed with Loading States */}
+      {showSkeletons ? (
+        <VideoSkeletonList count={3} />
+      ) : (
+        <div className="snap-container scrollbar-hide">
+          {allVideos.length === 0 ? (
+            <div className="snap-item flex items-center justify-center h-screen">
+              <div className="text-center text-muted-foreground">
+                <p className="text-lg mb-2">No videos found</p>
+                {selectedSpotId ? (
+                  <p className="text-sm">Try selecting a different location or browse all locations</p>
+                ) : (
+                  <p className="text-sm">Be the first to upload a video!</p>
+                )}
+              </div>
             </div>
-          </div>
-        ) : (
-          allVideos.map((video, index) => (
-            <div key={`${video.id}-${index}`} className="snap-item">
-              <VideoCard video={video} />
-            </div>
-          ))
-        )}
-        
-        {/* Load more trigger */}
-        <div ref={loadMoreRef} className="snap-item flex items-center justify-center">
-          {isFetchingNextPage && (
-            <div className="text-foreground text-sm">Loading more videos...</div>
+          ) : (
+            <>
+              {allVideos.map((video, index) => (
+                <div 
+                  key={`${video.id}-${index}`} 
+                  className="snap-item animate-fade-in"
+                  style={{ 
+                    animationDelay: `${index * 100}ms`,
+                    animationFillMode: 'both'
+                  }}
+                >
+                  <VideoCard video={video} />
+                </div>
+              ))}
+              
+              {/* Load more trigger */}
+              <div ref={loadMoreRef} className="snap-item flex items-center justify-center">
+                {isFetchingNextPage && (
+                  <div className="text-foreground text-sm">Loading more videos...</div>
+                )}
+              </div>
+            </>
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 };

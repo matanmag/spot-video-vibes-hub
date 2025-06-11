@@ -3,14 +3,10 @@ import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
-import LocationSearch from '@/components/LocationSearch';
 
-interface SearchBarProps {
-  selectedSpotId: string | null;
-  onLocationSelect: (spotId: string | null) => void;
-}
-
-const SearchBar = ({ selectedSpotId, onLocationSelect }: SearchBarProps) => {
+// This component is now simplified and only handles video search
+// Location search is handled by MobileLocationSearch component
+const SearchBar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
@@ -22,29 +18,17 @@ const SearchBar = ({ selectedSpotId, onLocationSelect }: SearchBarProps) => {
 
   return (
     <div className="absolute top-4 left-4 right-4 z-50">
-      <div className="flex flex-col gap-4">
-        {/* Location Search */}
-        <div className="flex justify-start">
-          <LocationSearch
-            selectedSpotId={selectedSpotId}
-            onLocationSelect={onLocationSelect}
-            placeholder="Search surf spots..."
-            className="w-full max-w-xs"
-          />
-        </div>
-        
-        {/* Video Search */}
-        <div className="relative max-w-md mx-auto">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-          <Input
-            type="text"
-            placeholder="Search videos..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={handleSearchKeyPress}
-            className="pl-10 bg-background/80 backdrop-blur-sm border-border/50"
-          />
-        </div>
+      {/* Video Search */}
+      <div className="relative max-w-md mx-auto">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <Input
+          type="text"
+          placeholder="Search videos..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyPress={handleSearchKeyPress}
+          className="pl-10 bg-background/80 backdrop-blur-sm border-border/50"
+        />
       </div>
     </div>
   );
