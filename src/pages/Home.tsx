@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import FeedItem from '@/components/FeedItem';
+import SearchOverlay from '@/components/SearchOverlay';
 import MobileLocationSearch from '@/components/MobileLocationSearch';
 import VideoSkeletonList from '@/components/VideoSkeletonList';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
@@ -11,6 +12,7 @@ const Home = () => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { selectedSpotId, updateLocationPreference, loading: locationLoading } = useLocationPreference();
   const [isLocationChanging, setIsLocationChanging] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const {
     data,
@@ -144,6 +146,16 @@ const Home = () => {
         isLoading={isLocationChanging}
       />
 
+      {/* Search Overlay */}
+      <SearchOverlay
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onSubmit={q => {
+          console.log("search", q);
+          // TODO: Implement search functionality
+        }}
+      />
+
       {/* Video Feed with Loading States */}
       {showSkeletons ? (
         <VideoSkeletonList count={3} />
@@ -177,6 +189,7 @@ const Home = () => {
                       comments={0}
                       bookmarks={0}
                       shares={0}
+                      onSearchClick={() => setSearchOpen(true)}
                     />
                   </div>
                 );
