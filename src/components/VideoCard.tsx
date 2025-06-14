@@ -44,8 +44,8 @@ const VideoCard = ({ video }: VideoCardProps) => {
     >
       <VideoPlayer video={video} containerRef={containerRef} />
 
-      {/* Video Info Overlay - Repositioned to be above bottom tab bar */}
-      <div className="absolute bottom-4 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
+      {/* Video Info Overlay */}
+      <div className="absolute bottom-16 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent pointer-events-none">
         <div className="flex justify-between items-end pointer-events-auto">
           <VideoInfo video={video} />
           <VideoActions videoId={video.id} />
