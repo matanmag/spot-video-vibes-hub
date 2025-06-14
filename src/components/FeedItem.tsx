@@ -1,3 +1,4 @@
+
 import React, { useRef } from "react";
 import {
   Heart,
@@ -34,7 +35,7 @@ export interface FeedItemProps {
   onComment?: () => void;
   onBookmark?: () => void;
   onShare?: () => void;
-  onSearchClick?: () => void;
+  onSearchClick: () => void;
 }
 
 const FeedItem: React.FC<FeedItemProps> = ({
