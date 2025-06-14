@@ -1,0 +1,145 @@
+
+import React from "react";
+import {
+  Heart,
+  MessageCircle,
+  Bookmark,
+  Share2,
+  Home,
+  TrendingUp,
+  Map,
+  User,
+  Plus,
+} from "lucide-react";
+import { Link, useLocation } from 'react-router-dom';
+
+export interface FeedItemProps {
+  videoUrl: string;
+  spot?: string;
+  username: string;
+  caption: string;
+  likes: number;
+  comments: number;
+  bookmarks: number;
+  shares: number;
+  onLike?: () => void;
+  onComment?: () => void;
+  onBookmark?: () => void;
+  onShare?: () => void;
+}
+
+const FeedItem: React.FC<FeedItemProps> = ({
+  videoUrl,
+  spot = "Pipeline, HI",
+  username,
+  caption,
+  likes,
+  comments,
+  bookmarks,
+  shares,
+  onLike,
+  onComment,
+  onBookmark,
+  onShare,
+}) => (
+  <div className="relative w-full h-full bg-[#071b2d] text-white overflow-hidden">
+    {/* video */}
+    <video
+      src={videoUrl}
+      className="absolute inset-0 w-full h-full object-cover"
+      autoPlay
+      muted
+      loop
+    />
+    <div className="absolute inset-0 bg-black/40" />
+
+    {/* header */}
+    <header className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 font-sans z-10">
+      <div className="flex items-center space-x-2">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#00e0ff]/20">
+          <Map className="w-5 h-5 text-[#00e0ff]" />
+        </div>
+        <span className="text-xl font-bold">Surfable</span>
+      </div>
+      <Link to="/search" className="rounded-full bg-white/10 p-2 backdrop-blur-sm">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-5 h-5 text-[#00e0ff]"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M11 4a7 7 0 100 14 7 7 0 000-14zM21 21l-4.35-4.35"
+          />
+        </svg>
+      </Link>
+    </header>
+
+    {/* footer */}
+    <footer className="absolute bottom-0 left-0 right-0 p-4 flex justify-between items-end pb-24 z-10">
+      <div className="space-y-2 max-w-[70%]">
+        <span className="text-sm bg-black/40 px-2 py-0.5 rounded-md text-[#00e0ff]">
+          {spot}
+        </span>
+        <h2 className="font-semibold">@{username}</h2>
+        <p className="text-sm text-white/80 break-words">{caption}</p>
+      </div>
+
+      <div className="flex flex-col items-center space-y-4">
+        <ActionButton icon={Heart} count={likes} onClick={onLike} color="#ff546e" />
+        <ActionButton icon={MessageCircle} count={comments} onClick={onComment} color="#00e0ff" />
+        <ActionButton icon={Bookmark} count={bookmarks} onClick={onBookmark} color="#00e0ff" />
+        <ActionButton icon={Share2} count={shares} onClick={onShare} color="#00e0ff" />
+      </div>
+    </footer>
+
+    {/* bottom nav */}
+    <nav className="absolute bottom-0 left-0 right-0 flex justify-around items-center bg-black/30 py-3 backdrop-blur-md border-t border-white/10 z-10">
+      <NavIcon icon={Home} path="/home" />
+      <NavIcon icon={TrendingUp} path="/search" />
+      <Link to="/upload" className="bg-[#00e0ff] p-3 rounded-xl shadow-lg active:scale-95 transition-transform">
+        <Plus className="w-6 h-6 text-[#071b2d]" />
+      </Link>
+      <NavIcon icon={Map} path="/map" />
+      <NavIcon icon={User} path="/profile" />
+    </nav>
+  </div>
+);
+
+interface BtnProps {
+  icon: React.ElementType;
+  count: number;
+  onClick?: () => void;
+  color: string;
+}
+const ActionButton: React.FC<BtnProps> = ({ icon: Icon, count, onClick, color }) => (
+  <button
+    onClick={onClick}
+    className="flex flex-col items-center p-3 rounded-full bg-white/10 backdrop-blur-md w-14 h-14 hover:bg-white/20 active:scale-90 transition-transform"
+  >
+    <Icon className="w-6 h-6" style={{ color }} />
+    <span className="text-xs text-white/80 mt-0.5">{count}</span>
+  </button>
+);
+
+const NavIcon: React.FC<{ icon: React.ElementType; path: string }> = ({ icon: Icon, path }) => {
+  const location = useLocation();
+  const isActive = () => {
+    if (path === '/home') {
+      return location.pathname === '/' || location.pathname === '/home';
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  return (
+    <Link to={path} className={`p-2 rounded-full transition-colors ${isActive() ? "text-[#00e0ff]" : "text-white/60 hover:text-white"}`}>
+      <Icon className="w-7 h-7" />
+    </Link>
+  );
+};
+
+export default FeedItem;

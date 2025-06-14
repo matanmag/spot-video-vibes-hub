@@ -1,8 +1,7 @@
-
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import VideoCard from '@/components/VideoCard';
+import FeedItem from '@/components/FeedItem';
 import MobileLocationSearch from '@/components/MobileLocationSearch';
 import VideoSkeletonList from '@/components/VideoSkeletonList';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
@@ -163,18 +162,32 @@ const Home = () => {
             </div>
           ) : (
             <>
-              {allVideos.map((video, index) => (
-                <div 
-                  key={`${video.id}-${index}`} 
-                  className="snap-item animate-fade-in"
-                  style={{ 
-                    animationDelay: `${index * 100}ms`,
-                    animationFillMode: 'both'
-                  }}
-                >
-                  <VideoCard video={video} />
-                </div>
-              ))}
+              {allVideos.map((video, index) => {
+                const username = video.profiles?.email?.split('@')[0] || 'surfer';
+                const videoUrl = video.optimized_url || video.video_url;
+
+                return (
+                  <div 
+                    key={`${video.id}-${index}`} 
+                    className="snap-item animate-fade-in"
+                    style={{ 
+                      animationDelay: `${index * 100}ms`,
+                      animationFillMode: 'both'
+                    }}
+                  >
+                    <FeedItem
+                      videoUrl={videoUrl}
+                      spot={video.spots?.name}
+                      username={username}
+                      caption={video.description || ''}
+                      likes={video.views || 0} // Using views for likes as a placeholder
+                      comments={0}
+                      bookmarks={0}
+                      shares={0}
+                    />
+                  </div>
+                );
+              })}
               
               {/* Load more trigger */}
               <div ref={loadMoreRef} className="snap-item flex items-center justify-center">
