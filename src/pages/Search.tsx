@@ -1,36 +1,58 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Search as SearchIcon } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import SearchResults from '@/components/SearchResults';
-import MobileLocationSearch from '@/components/MobileLocationSearch';
 
 const Search = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const currentQuery = searchParams.get('q') || '';
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
 
-  const handleLocationSelect = (spotId: string | null, spotName?: string) => {
-    if (spotId) {
-      navigate(`/search?spot=${spotId}`);
+  // Update search query when URL params change
+  useEffect(() => {
+    const queryFromUrl = searchParams.get('q') || '';
+    setSearchQuery(queryFromUrl);
+  }, [searchParams]);
+
+  const handleSearch = (query: string) => {
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
     } else {
       navigate('/search');
     }
-    setIsSearchOpen(false);
   };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch(searchQuery);
+    }
+  };
+
+  const currentQuery = searchParams.get('q') || '';
 
   return (
     <div className="min-h-screen bg-black pb-16">
       <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-sm border-b border-border/20">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3 mb-4">
-            <button 
-              onClick={() => setIsSearchOpen(true)}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
-            >
-              <SearchIcon className="h-6 w-6 text-primary" />
-            </button>
+            <SearchIcon className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold text-white">Search</h1>
+          </div>
+          
+          <div className="max-w-md mx-auto">
+            <div className="relative">
+              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Search videos, users, locations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="pl-10 bg-background/80 backdrop-blur-sm border-border/50"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -38,19 +60,6 @@ const Search = () => {
       <div className="h-[calc(100vh-140px)]">
         <SearchResults query={currentQuery} />
       </div>
-
-      {isSearchOpen && (
-        <div className="fixed inset-0 z-[100]">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSearchOpen(false)} />
-          <div className="relative h-full">
-            <MobileLocationSearch
-              selectedSpotId={null}
-              onLocationSelect={handleLocationSelect}
-              isLoading={false}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
