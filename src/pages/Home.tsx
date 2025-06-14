@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import FeedItem from '@/components/FeedItem';
 import MobileLocationSearch from '@/components/MobileLocationSearch';
@@ -8,7 +7,6 @@ import VideoSkeletonList from '@/components/VideoSkeletonList';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
 
 const Home = () => {
-  const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { selectedSpotId, updateLocationPreference, loading: locationLoading } = useLocationPreference();
@@ -78,11 +76,6 @@ const Home = () => {
     setTimeout(() => {
       setIsLocationChanging(false);
     }, 500);
-  };
-
-  // Handle search button click - navigate to search page
-  const handleSearchClick = () => {
-    navigate('/search');
   };
 
   // Refetch when location changes
@@ -184,7 +177,6 @@ const Home = () => {
                       comments={0}
                       bookmarks={0}
                       shares={0}
-                      onSearchClick={handleSearchClick}
                     />
                   </div>
                 );
