@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import BottomTabBar from "@/components/BottomTabBar";
+import AppBottomNav from "@/components/AppBottomNav";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
@@ -20,7 +20,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
-  const showTabBar = location.pathname !== '/' && location.pathname !== '/home';
+  const showTabBar = location.pathname !== '/login';
 
   return (
     <div className="relative min-h-screen">
@@ -58,7 +58,7 @@ const AppContent = () => {
         } />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {showTabBar && <BottomTabBar />}
+      {showTabBar && <AppBottomNav />}
     </div>
   );
 };
