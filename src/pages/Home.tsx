@@ -1,5 +1,7 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import FeedItem from '@/components/FeedItem';
 import SearchOverlay from '@/components/SearchOverlay';
@@ -8,6 +10,7 @@ import VideoSkeletonList from '@/components/VideoSkeletonList';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
 
 const Home = () => {
+  const navigate = useNavigate();
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { selectedSpotId, updateLocationPreference, loading: locationLoading } = useLocationPreference();
@@ -80,6 +83,15 @@ const Home = () => {
     }, 500);
   };
 
+  // Handle search submission
+  const handleSearchSubmit = (query: string) => {
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query.trim())}`);
+    } else {
+      navigate('/search');
+    }
+  };
+
   // Refetch when location changes
   useEffect(() => {
     refetch();
@@ -150,10 +162,7 @@ const Home = () => {
       <SearchOverlay
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
-        onSubmit={q => {
-          console.log("search", q);
-          // TODO: Implement search functionality
-        }}
+        onSubmit={handleSearchSubmit}
       />
 
       {/* Video Feed with Loading States */}
