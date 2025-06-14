@@ -1,9 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import VideoCard from '@/components/VideoCard';
-import LocationSearch from '@/components/LocationSearch';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
 
 interface SearchResultsProps {
@@ -11,7 +9,7 @@ interface SearchResultsProps {
 }
 
 const SearchResults = ({ query }: SearchResultsProps) => {
-  const { selectedSpotId, updateLocationPreference } = useLocationPreference();
+  const { selectedSpotId } = useLocationPreference();
   const [localSpotId, setLocalSpotId] = useState<string | null>(selectedSpotId);
 
   useEffect(() => {
@@ -75,43 +73,19 @@ const SearchResults = ({ query }: SearchResultsProps) => {
       return lastPage[lastPage.length - 1]?.created_at;
     },
     initialPageParam: undefined,
-    enabled: query.trim().length > 0 || localSpotId !== null
+    enabled: true // Always enable the query to show all videos
   });
 
   useEffect(() => {
     refetch();
   }, [query, localSpotId, refetch]);
 
-  const handleLocationChange = (spotId: string | null) => {
-    setLocalSpotId(spotId);
-    updateLocationPreference(spotId);
-  };
-
   const allVideos = data?.pages.flatMap(page => page) || [];
-
-  if (!query.trim() && !localSpotId) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md mb-8">
-          <LocationSearch
-            selectedSpotId={localSpotId}
-            onLocationSelect={handleLocationChange}
-            placeholder="Search for surf spots..."
-            className="w-full"
-          />
-        </div>
-        <div className="text-center text-white/60">
-          <p className="text-lg mb-2">Search for videos</p>
-          <p className="text-sm">Enter a search term or select a location to find videos</p>
-        </div>
-      </div>
-    );
-  }
 
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-white text-lg">Searching...</div>
+        <div className="text-white text-lg">Loading videos...</div>
       </div>
     );
   }
@@ -119,23 +93,13 @@ const SearchResults = ({ query }: SearchResultsProps) => {
   if (error) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="text-red-500 text-lg">Error searching videos</div>
+        <div className="text-red-500 text-lg">Error loading videos</div>
       </div>
     );
   }
 
   return (
     <div className="h-full flex flex-col">
-      {/* Location Filter */}
-      <div className="p-4 border-b border-border/20">
-        <LocationSearch
-          selectedSpotId={localSpotId}
-          onLocationSelect={handleLocationChange}
-          placeholder="Filter by location..."
-          className="max-w-md"
-        />
-      </div>
-
       {/* Results */}
       <div className="flex-1 overflow-y-auto">
         {allVideos.length === 0 ? (
