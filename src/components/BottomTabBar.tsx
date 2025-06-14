@@ -1,5 +1,5 @@
 
-import { Home, Map, Upload, Search, User } from 'lucide-react';
+import { Home, Map, Upload, User } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 
 const BottomTabBar = () => {
@@ -10,7 +10,6 @@ const BottomTabBar = () => {
     { name: 'Home', path: '/home', icon: Home },
     { name: 'Map', path: '/map', icon: Map },
     { name: 'Upload', path: '/upload', icon: Upload },
-    { name: 'Search', path: '/search', icon: Search },
     { name: 'Profile', path: '/profile', icon: User },
   ];
 
