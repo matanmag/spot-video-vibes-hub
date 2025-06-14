@@ -163,9 +163,6 @@ const Home = () => {
           ) : (
             <>
               {allVideos.map((video, index) => {
-                const username = video.profiles?.email?.split('@')[0] || 'surfer';
-                const videoUrl = video.optimized_url || video.video_url;
-
                 return (
                   <div 
                     key={`${video.id}-${index}`} 
@@ -176,11 +173,7 @@ const Home = () => {
                     }}
                   >
                     <FeedItem
-                      videoUrl={videoUrl}
-                      spot={video.spots?.name}
-                      username={username}
-                      caption={video.description || ''}
-                      likes={video.views || 0} // Using views for likes as a placeholder
+                      video={video}
                       comments={0}
                       bookmarks={0}
                       shares={0}
