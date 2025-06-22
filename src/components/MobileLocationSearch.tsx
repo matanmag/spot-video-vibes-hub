@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Search, X, MapPin, Navigation } from 'lucide-react';
 import { useLocationSearch } from '@/hooks/useLocationSearch';
@@ -14,6 +15,7 @@ const MobileLocationSearch = ({
   onLocationSelect,
   isLoading 
 }: MobileLocationSearchProps) => {
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   
@@ -27,6 +29,10 @@ const MobileLocationSearch = ({
     clearSelection
   } = useLocationSearch(selectedSpotId);
 
+  const handleFocus = () => {
+    setIsOverlayOpen(true);
+  };
+
   const handleClear = () => {
     setSearchValue('');
     setSearchQuery('');
@@ -38,6 +44,7 @@ const MobileLocationSearch = ({
 
   const handleLocationSelectWrapper = (spot: any) => {
     handleLocationSelect(spot, onLocationSelect);
+    setIsOverlayOpen(false);
     setSearchValue(spot?.name || '');
     setSearchQuery('');
     if (inputRef.current) {
@@ -47,6 +54,7 @@ const MobileLocationSearch = ({
 
   const handleUseCurrentLocation = () => {
     // For now, just close the overlay - could implement geolocation later
+    setIsOverlayOpen(false);
     if (inputRef.current) {
       inputRef.current.blur();
     }
@@ -81,6 +89,7 @@ const MobileLocationSearch = ({
               placeholder="Search city or place"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
+              onFocus={handleFocus}
               className="w-full h-12 pl-12 pr-12 rounded-full bg-muted/50 border border-border/30 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-200 relative z-10"
             />
             
@@ -103,8 +112,8 @@ const MobileLocationSearch = ({
       </div>
 
       <MobileLocationOverlay
-        isOpen={true}
-        onClose={() => {}}
+        isOpen={isOverlayOpen}
+        onClose={() => setIsOverlayOpen(false)}
         searchQuery={searchQuery}
         searchResults={searchResults}
         loading={loading}
