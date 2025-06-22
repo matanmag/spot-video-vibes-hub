@@ -1,5 +1,5 @@
 
-import { Home, Map, Upload, Search, User } from 'lucide-react';
+import { Home, Map, Upload, Search, User, Database } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 
 const BottomTabBar = () => {
@@ -11,6 +11,7 @@ const BottomTabBar = () => {
     { name: 'Map', path: '/map', icon: Map },
     { name: 'Upload', path: '/upload', icon: Upload },
     { name: 'Search', path: '/search', icon: Search },
+    { name: 'Manage', path: '/manage', icon: Database },
     { name: 'Profile', path: '/profile', icon: User },
   ];
 
@@ -23,7 +24,7 @@ const BottomTabBar = () => {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
-      <div className="flex justify-around items-center h-16 px-2">
+      <div className="flex justify-around items-center h-16 px-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = isActive(tab.path);
@@ -35,7 +36,7 @@ const BottomTabBar = () => {
               className="flex flex-col items-center justify-center flex-1 py-1"
             >
               <Icon 
-                className={`h-6 w-6 mb-1 ${
+                className={`h-5 w-5 mb-1 ${
                   active ? 'text-blue-500' : 'text-muted-foreground'
                 }`} 
               />

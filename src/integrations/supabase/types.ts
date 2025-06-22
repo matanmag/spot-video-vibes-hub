@@ -210,6 +210,28 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_video_completely: {
+        Args: { video_id_param: string }
+        Returns: Json
+      }
+      get_deletion_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      get_videos_for_deletion: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          video_url: string
+          optimized_url: string
+          thumbnail_url: string
+          views: number
+          created_at: string
+          file_count: number
+          estimated_size_mb: number
+        }[]
+      }
       gtrgm_compress: {
         Args: { "": unknown }
         Returns: unknown
