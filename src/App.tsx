@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import Map from "./pages/Map";
 import Search from "./pages/Search";
 import NotFound from "./pages/NotFound";
+import DeleteVideos from "./pages/DeleteVideos";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,11 @@ const App = () => (
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/delete-videos" element={
+                <ProtectedRoute>
+                  <DeleteVideos />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

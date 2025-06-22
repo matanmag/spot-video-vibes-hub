@@ -21,6 +21,16 @@ interface DeletionStats {
   old_videos: number;
 }
 
+interface DeleteVideoResult {
+  success: boolean;
+  video_id?: string;
+  video_url?: string;
+  optimized_url?: string;
+  thumbnail_url?: string;
+  title?: string;
+  error?: string;
+}
+
 export const getVideosForDeletion = async (): Promise<VideoForDeletion[]> => {
   console.log('Fetching videos recommended for deletion...');
   
@@ -44,7 +54,7 @@ export const getDeletionStats = async (): Promise<DeletionStats> => {
     throw new Error(`Failed to fetch deletion stats: ${error.message}`);
   }
   
-  return data || {
+  return data as DeletionStats || {
     total_videos: 0,
     videos_with_multiple_files: 0,
     estimated_total_size_gb: 0,
@@ -53,7 +63,7 @@ export const getDeletionStats = async (): Promise<DeletionStats> => {
   };
 };
 
-export const deleteVideoCompletely = async (videoId: string) => {
+export const deleteVideoCompletely = async (videoId: string): Promise<DeleteVideoResult> => {
   console.log('Deleting video completely:', videoId);
   
   const { data, error } = await supabase.rpc('delete_video_completely', {
@@ -65,12 +75,14 @@ export const deleteVideoCompletely = async (videoId: string) => {
     throw new Error(`Failed to delete video: ${error.message}`);
   }
   
-  if (!data?.success) {
-    throw new Error(data?.error || 'Unknown error deleting video');
+  const result = data as DeleteVideoResult;
+  
+  if (!result?.success) {
+    throw new Error(result?.error || 'Unknown error deleting video');
   }
   
-  console.log('Video deleted successfully:', data);
-  return data;
+  console.log('Video deleted successfully:', result);
+  return result;
 };
 
 export const deleteStorageFiles = async (urls: string[]) => {
@@ -169,6 +181,55 @@ export const cleanupTopVideos = async (count: number = 4) => {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
       deletedCount: 0
+    };
+  }
+};
+
+// Simple function to delete all videos immediately
+export const deleteAllVideosNow = async () => {
+  console.log('DELETING ALL VIDEOS NOW...');
+  
+  try {
+    const videosForDeletion = await getVideosForDeletion();
+    console.log(`Found ${videosForDeletion.length} videos to delete`);
+    
+    if (videosForDeletion.length === 0) {
+      return { success: true, message: 'No videos to delete' };
+    }
+    
+    let deletedCount = 0;
+    
+    for (const video of videosForDeletion) {
+      try {
+        const result = await deleteVideoCompletely(video.id);
+        
+        const filesToDelete = [
+          result.video_url,
+          result.optimized_url,
+          result.thumbnail_url
+        ].filter(Boolean);
+        
+        if (filesToDelete.length > 0) {
+          await deleteStorageFiles(filesToDelete);
+        }
+        
+        deletedCount++;
+        console.log(`Deleted: ${video.title}`);
+      } catch (error) {
+        console.error(`Failed to delete video ${video.title}:`, error);
+      }
+    }
+    
+    return {
+      success: true,
+      deletedCount,
+      message: `Deleted ${deletedCount} videos`
+    };
+  } catch (error) {
+    console.error('Error deleting all videos:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 };
