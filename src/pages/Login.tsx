@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, LogIn } from 'lucide-react';
 
 const Login = () => {
@@ -61,8 +60,8 @@ const Login = () => {
   // Show loading while checking auth state
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#071b2d]">
+        <div className="text-lg text-white">Loading...</div>
       </div>
     );
   }
@@ -73,50 +72,48 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-primary/10 rounded-full">
-              <LogIn className="h-6 w-6 text-primary" />
-            </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#071b2d] text-white p-4 font-sans">
+      <div className="text-center mb-10">
+        <div className="inline-block p-4 bg-[#00e0ff]/20 rounded-full mb-4">
+          <LogIn className="h-8 w-8 text-[#00e0ff]" />
+        </div>
+        <h1 className="text-3xl font-bold">Welcome to Surfable</h1>
+        <p className="text-white/80 mt-2">
+          Sign in to share your surf videos.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-white/80 sr-only">Email Address</Label>
+          <div className="relative flex items-center">
+            <Mail className="absolute left-4 h-5 w-5 text-[#00e0ff]/60" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-12 w-full h-14 bg-white/10 border-white/20 rounded-xl text-lg text-white placeholder:text-white/50 focus:ring-2 focus:ring-[#00e0ff] focus:border-[#00e0ff] transition-all"
+              required
+              disabled={loading}
+            />
           </div>
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
-          <p className="text-muted-foreground">
-            Sign in to upload and share your videos
-          </p>
-        </CardHeader>
+        </div>
 
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
+        <Button 
+          type="submit" 
+          className="w-full h-14 bg-[#00e0ff] text-[#071b2d] font-bold text-lg rounded-xl hover:bg-white transition-all active:scale-95" 
+          disabled={loading || !email.trim()}
+        >
+          {loading ? "Sending..." : "Send Magic Link"}
+        </Button>
+      </form>
 
-            <Button type="submit" className="w-full" disabled={loading || !email.trim()}>
-              {loading ? "Sending Magic Link..." : "Send Magic Link"}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>We'll send you a secure link to sign in instantly.</p>
-            <p className="mt-2">No password required!</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="mt-8 text-center text-sm text-white/60">
+        <p>We'll send a secure link to sign in instantly.</p>
+        <p className="mt-1">No password required!</p>
+      </div>
     </div>
   );
 };
