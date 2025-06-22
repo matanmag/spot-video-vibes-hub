@@ -14,7 +14,6 @@ import Upload from "./pages/Upload";
 import Profile from "./pages/Profile";
 import Map from "./pages/Map";
 import Search from "./pages/Search";
-import VideoManagement from "./pages/VideoManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,11 +56,6 @@ const App = () => (
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/manage" element={
-                <ProtectedRoute>
-                  <VideoManagement />
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />
