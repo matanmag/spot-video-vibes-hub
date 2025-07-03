@@ -41,7 +41,7 @@ const VideoManagement = () => {
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_deletion_stats');
       if (error) throw error;
-      return data as DeletionStats;
+      return data as unknown as DeletionStats;
     },
   });
 
@@ -72,19 +72,20 @@ const VideoManagement = () => {
       
       // Now delete the actual files from storage
       const filesToDelete: string[] = [];
+      const result = data as any;
       
-      if (data.video_url) {
-        const videoPath = data.video_url.split('/').pop();
+      if (result.video_url) {
+        const videoPath = result.video_url.split('/').pop();
         if (videoPath) filesToDelete.push(videoPath);
       }
       
-      if (data.optimized_url) {
-        const optimizedPath = data.optimized_url.split('/').pop();
+      if (result.optimized_url) {
+        const optimizedPath = result.optimized_url.split('/').pop();
         if (optimizedPath) filesToDelete.push(`previews/${optimizedPath}`);
       }
       
-      if (data.thumbnail_url) {
-        const thumbnailPath = data.thumbnail_url.split('/').pop();
+      if (result.thumbnail_url) {
+        const thumbnailPath = result.thumbnail_url.split('/').pop();
         if (thumbnailPath) {
           // Delete from thumbnails bucket
           const { error: thumbError } = await supabase.storage
@@ -113,7 +114,7 @@ const VideoManagement = () => {
     onSuccess: (data) => {
       toast({
         title: "Video deleted successfully",
-        description: `"${data.title}" has been removed`,
+        description: `"${(data as any).title}" has been removed`,
       });
       queryClient.invalidateQueries({ queryKey: ['deletion-stats'] });
       queryClient.invalidateQueries({ queryKey: ['videos-for-deletion'] });
