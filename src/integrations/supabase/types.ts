@@ -182,6 +182,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_video_completely: {
+        Args: { video_id_param: string }
+        Returns: undefined
+      }
+      get_deletion_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_videos: number
+          total_likes: number
+          total_views: number
+        }[]
+      }
+      get_videos_for_deletion: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          title: string
+          video_url: string
+          optimized_url: string
+          thumbnail_url: string
+          created_at: string
+          views: number
+          likes_count: number
+        }[]
+      }
       increment_video_views: {
         Args: { video_id: string }
         Returns: undefined
