@@ -40,7 +40,7 @@ const SearchResults = ({ query }: SearchResultsProps) => {
             latitude,
             longitude
           ),
-          profiles (
+          profiles!videos_user_id_fkey (
             email
           )
         `)

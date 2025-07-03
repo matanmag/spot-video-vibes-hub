@@ -27,11 +27,10 @@ serve(async (req) => {
       );
     }
 
-    // Create Supabase client with service role key
-    const serviceKey = Deno.env.get('SERVICE_ROLE_KEY');
+    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      serviceKey ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
           headers: { Authorization: req.headers.get('Authorization')! },

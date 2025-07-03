@@ -35,7 +35,7 @@ const Home = () => {
             latitude,
             longitude
           ),
-          profiles (
+          profiles!videos_user_id_fkey (
             email
           )
         `)
