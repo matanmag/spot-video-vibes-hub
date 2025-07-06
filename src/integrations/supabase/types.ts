@@ -175,6 +175,13 @@ export type Database = {
             referencedRelation: "spots"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "videos_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
