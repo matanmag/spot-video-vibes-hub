@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import VideoCard from '@/components/VideoCard';
 import MobileLocationSearch from '@/components/MobileLocationSearch';
 import VideoSkeletonList from '@/components/VideoSkeletonList';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
