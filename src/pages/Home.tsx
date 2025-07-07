@@ -6,14 +6,11 @@ import VideoCard from '@/components/VideoCard';
 import MobileLocationSearch from '@/components/MobileLocationSearch';
 import VideoSkeletonList from '@/components/VideoSkeletonList';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
-import { useAuth } from '@/hooks/useAuth';
-import FeedMobileCard from '@/components/FeedMobileCard';
 
 const Home = () => {
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { selectedSpotId, updateLocationPreference, loading: locationLoading } = useLocationPreference();
-  const { user } = useAuth();
   const [isLocationChanging, setIsLocationChanging] = useState(false);
 
   const {
@@ -151,32 +148,43 @@ const Home = () => {
       {/* Video Feed with Loading States */}
       {showSkeletons ? (
         <VideoSkeletonList count={3} />
-      ) : allVideos.length === 0 ? (
-        <div className="flex items-center justify-center h-[100svh]">
-          <div className="text-center text-muted-foreground">
-            <p className="text-lg mb-2">No videos found</p>
-            {selectedSpotId ? (
-              <p className="text-sm">Try selecting a different location or browse all locations</p>
-            ) : (
-              <p className="text-sm">Be the first to upload a video!</p>
-            )}
-          </div>
-        </div>
       ) : (
-        <section className="snap-y snap-mandatory overflow-y-scroll h-[100svh]">
-          {allVideos.map(video => (
-            <div key={video.id} className="snap-start">
-              <FeedMobileCard video={video} />
+        <div className="snap-container scrollbar-hide">
+          {allVideos.length === 0 ? (
+            <div className="snap-item flex items-center justify-center h-screen">
+              <div className="text-center text-muted-foreground">
+                <p className="text-lg mb-2">No videos found</p>
+                {selectedSpotId ? (
+                  <p className="text-sm">Try selecting a different location or browse all locations</p>
+                ) : (
+                  <p className="text-sm">Be the first to upload a video!</p>
+                )}
+              </div>
             </div>
-          ))}
-          
-          {/* Load more trigger */}
-          <div ref={loadMoreRef} className="snap-start flex items-center justify-center h-[100svh]">
-            {isFetchingNextPage && (
-              <div className="text-foreground text-sm">Loading more videos...</div>
-            )}
-          </div>
-        </section>
+          ) : (
+            <>
+              {allVideos.map((video, index) => (
+                <div 
+                  key={`${video.id}-${index}`} 
+                  className="snap-item animate-fade-in"
+                  style={{ 
+                    animationDelay: `${index * 100}ms`,
+                    animationFillMode: 'both'
+                  }}
+                >
+                  <VideoCard video={video} />
+                </div>
+              ))}
+              
+              {/* Load more trigger */}
+              <div ref={loadMoreRef} className="snap-item flex items-center justify-center">
+                {isFetchingNextPage && (
+                  <div className="text-foreground text-sm">Loading more videos...</div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       )}
     </div>
   );
