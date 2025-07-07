@@ -140,14 +140,12 @@ const Home = () => {
 
   return (
     <div className="relative bg-background">
-      {/* Fixed Header with Search */}
-      <header className="fixed top-0 left-0 right-0 z-50">
-        <MobileLocationSearch
-          selectedSpotId={selectedSpotId}
-          onLocationSelect={handleLocationChange}
-          isLoading={isLocationChanging}
-        />
-      </header>
+      {/* Mobile Location Search Bar */}
+      <MobileLocationSearch
+        selectedSpotId={selectedSpotId}
+        onLocationSelect={handleLocationChange}
+        isLoading={isLocationChanging}
+      />
 
       {/* Video Feed with Loading States */}
       {showSkeletons ? (
