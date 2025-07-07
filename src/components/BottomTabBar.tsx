@@ -1,6 +1,6 @@
 
-import { Home, Map, Upload, Search, User, Database } from 'lucide-react';
-import { useLocation, Link } from 'react-router-dom';
+import { Home, TrendingUp, Plus, Map, User } from 'lucide-react';
+import { useLocation, NavLink } from 'react-router-dom';
 
 const BottomTabBar = () => {
   const location = useLocation();
@@ -8,10 +8,9 @@ const BottomTabBar = () => {
 
   const tabs = [
     { name: 'Home', path: '/home', icon: Home },
+    { name: 'Trending', path: '/trending', icon: TrendingUp },
+    { name: 'Add', path: '/upload', icon: Plus },
     { name: 'Map', path: '/map', icon: Map },
-    { name: 'Upload', path: '/upload', icon: Upload },
-    { name: 'Search', path: '/search', icon: Search },
-    { name: 'Manage', path: '/manage', icon: Database },
     { name: 'Profile', path: '/profile', icon: User },
   ];
 
@@ -30,24 +29,31 @@ const BottomTabBar = () => {
           const active = isActive(tab.path);
           
           return (
-            <Link
+            <NavLink
               key={tab.name}
               to={tab.path}
-              className="flex flex-col items-center justify-center flex-1 py-1"
+              className={({ isActive }) => `
+                flex flex-col items-center justify-center flex-1 py-1
+                ${isActive ? 'text-turquoise' : 'text-muted-foreground'}
+              `}
             >
-              <Icon 
-                className={`h-5 w-5 mb-1 ${
-                  active ? 'text-blue-500' : 'text-muted-foreground'
-                }`} 
-              />
-              <span 
-                className={`text-xs ${
-                  active ? 'text-blue-500 font-medium' : 'text-muted-foreground'
-                }`}
-              >
-                {tab.name}
-              </span>
-            </Link>
+              {({ isActive }) => (
+                <>
+                  <Icon 
+                    className={`h-5 w-5 mb-1 ${
+                      isActive ? 'text-turquoise' : 'text-muted-foreground'
+                    }`} 
+                  />
+                  <span 
+                    className={`text-xs ${
+                      isActive ? 'text-turquoise font-medium' : 'text-muted-foreground'
+                    }`}
+                  >
+                    {tab.name}
+                  </span>
+                </>
+              )}
+            </NavLink>
           );
         })}
       </div>

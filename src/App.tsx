@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import BottomTabBar from "@/components/BottomTabBar";
+import RequireAdmin from "@/components/RequireAdmin";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
@@ -14,6 +15,7 @@ import Upload from "./pages/Upload";
 import Profile from "./pages/Profile";
 import Map from "./pages/Map";
 import Search from "./pages/Search";
+import Trending from "./pages/Trending";
 import VideoManagement from "./pages/VideoManagement";
 import NotFound from "./pages/NotFound";
 
@@ -39,6 +41,11 @@ const App = () => (
                   <Home />
                 </ProtectedRoute>
               } />
+              <Route path="/trending" element={
+                <ProtectedRoute>
+                  <Trending />
+                </ProtectedRoute>
+              } />
               <Route path="/map" element={
                 <ProtectedRoute>
                   <Map />
@@ -61,7 +68,9 @@ const App = () => (
               } />
               <Route path="/manage" element={
                 <ProtectedRoute>
-                  <VideoManagement />
+                  <RequireAdmin>
+                    <VideoManagement />
+                  </RequireAdmin>
                 </ProtectedRoute>
               } />
               <Route path="*" element={<NotFound />} />

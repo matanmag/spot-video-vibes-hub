@@ -1,89 +1,93 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { User, LogOut, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
-  const { user } = useAuth();
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user) {
-      setEmail(user.email || '');
-    }
-  }, [user]);
-
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { error } = await supabase
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
         .from('profiles')
-        .update({ email })
-        .eq('id', user?.id);
+        .select('is_admin, email')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Profile updated!",
-          description: "Your profile has been successfully updated.",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Please log in to access your profile.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-16">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8">Profile</h1>
-          
-          <div className="bg-card p-6 rounded-lg shadow">
-            <form onSubmit={handleUpdateProfile} className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-2"
-                />
-              </div>
-
-              <div>
-                <Label>User ID</Label>
-                <Input
-                  value={user?.id || ''}
-                  disabled
-                  className="mt-2 bg-muted"
-                />
-              </div>
-
-              <Button type="submit" disabled={loading}>
-                {loading ? "Updating..." : "Update Profile"}
-              </Button>
-            </form>
+          <div className="flex items-center gap-3 mb-8">
+            <User className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold">Profile</h1>
           </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Email</p>
+                <p className="font-medium">{user.email}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-muted-foreground">User ID</p>
+                <p className="font-mono text-sm">{user.id}</p>
+              </div>
+
+              {profile?.is_admin && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Role</p>
+                  <p className="font-medium text-turquoise">Administrator</p>
+                </div>
+              )}
+              
+              <div className="pt-4 space-y-3">
+                {profile?.is_admin && (
+                  <Button 
+                    onClick={() => navigate('/manage')}
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    <Database className="h-4 w-4 mr-2" />
+                    Manage uploads
+                  </Button>
+                )}
+                
+                <Button 
+                  onClick={signOut}
+                  variant="destructive" 
+                  className="w-full"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

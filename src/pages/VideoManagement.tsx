@@ -17,8 +17,7 @@ interface VideoForDeletion {
   thumbnail_url: string;
   views: number;
   created_at: string;
-  file_count: number;
-  estimated_size_mb: number;
+  likes_count: number;
 }
 
 interface DeletionStats {
@@ -55,60 +54,19 @@ const VideoManagement = () => {
     },
   });
 
-  // Delete video mutation
+  // Delete video mutation (admin)
   const deleteVideoMutation = useMutation({
     mutationFn: async (videoId: string) => {
-      console.log('Deleting video:', videoId);
-      const { data, error } = await supabase.rpc('delete_video_completely', {
-        video_id_param: videoId
+      console.log('Admin deleting video:', videoId);
+      
+      const { data, error } = await supabase.functions.invoke('delete_video_admin', {
+        body: { id: videoId },
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
       });
-      
-      if (error) {
-        console.error('Database deletion error:', error);
-        throw error;
-      }
-      
-      console.log('Database deletion result:', data);
-      
-      // Now delete the actual files from storage
-      const filesToDelete: string[] = [];
-      const result = data as any;
-      
-      if (result.video_url) {
-        const videoPath = result.video_url.split('/').pop();
-        if (videoPath) filesToDelete.push(videoPath);
-      }
-      
-      if (result.optimized_url) {
-        const optimizedPath = result.optimized_url.split('/').pop();
-        if (optimizedPath) filesToDelete.push(`previews/${optimizedPath}`);
-      }
-      
-      if (result.thumbnail_url) {
-        const thumbnailPath = result.thumbnail_url.split('/').pop();
-        if (thumbnailPath) {
-          // Delete from thumbnails bucket
-          const { error: thumbError } = await supabase.storage
-            .from('thumbnails-public')
-            .remove([`thumbnails/${thumbnailPath}`]);
-          
-          if (thumbError) {
-            console.error('Thumbnail deletion error:', thumbError);
-          }
-        }
-      }
-      
-      // Delete video files from videos bucket
-      if (filesToDelete.length > 0) {
-        const { error: storageError } = await supabase.storage
-          .from('videos-public')
-          .remove(filesToDelete);
-        
-        if (storageError) {
-          console.error('Storage deletion error:', storageError);
-        }
-      }
-      
+
+      if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
@@ -165,20 +123,13 @@ const VideoManagement = () => {
   const handleSelectHighImpact = () => {
     if (!videos) return;
     
-    // Select videos with multiple files and low views (high storage impact, low value)
+    // Select videos with low views and high likes ratio
     const highImpactVideos = videos
-      .filter(v => v.file_count >= 2 && v.views < 5)
+      .filter(v => v.views < 5 && v.likes_count === 0)
       .slice(0, 10)
       .map(v => v.id);
     
     setSelectedVideos(new Set(highImpactVideos));
-  };
-
-  const estimateSelectedSavings = () => {
-    if (!videos) return 0;
-    return videos
-      .filter(v => selectedVideos.has(v.id))
-      .reduce((total, v) => total + v.estimated_size_mb, 0);
   };
 
   if (!user) {
@@ -275,7 +226,7 @@ const VideoManagement = () => {
           
           {selectedVideos.size > 0 && (
             <Badge variant="secondary">
-              Estimated savings: {Math.round(estimateSelectedSavings())} MB
+              Selected: {selectedVideos.size} videos
             </Badge>
           )}
         </div>
@@ -313,11 +264,7 @@ const VideoManagement = () => {
                           {video.views} views
                         </Badge>
                         <Badge variant="outline">
-                          <HardDrive className="h-3 w-3 mr-1" />
-                          {video.estimated_size_mb} MB
-                        </Badge>
-                        <Badge variant="outline">
-                          {video.file_count} files
+                          ❤️ {video.likes_count} likes
                         </Badge>
                         <Badge variant="outline">
                           {new Date(video.created_at).toLocaleDateString()}

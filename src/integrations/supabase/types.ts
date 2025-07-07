@@ -48,6 +48,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_admin: boolean
           last_spot_id: string | null
           updated_at: string
         }
@@ -55,6 +56,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
+          is_admin?: boolean
           last_spot_id?: string | null
           updated_at?: string
         }
@@ -62,6 +64,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          is_admin?: boolean
           last_spot_id?: string | null
           updated_at?: string
         }
