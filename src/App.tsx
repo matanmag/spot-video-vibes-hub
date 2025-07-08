@@ -30,17 +30,9 @@ const App = () => (
         <BrowserRouter>
           <div className="relative min-h-screen">
             <Routes>
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Home />
-                </ProtectedRoute>
-              } />
+              <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/home" element={
-                <ProtectedRoute>
-                  <Home />
-                </ProtectedRoute>
-              } />
+              <Route path="/home" element={<Home />} />
               <Route path="/trending" element={
                 <ProtectedRoute>
                   <Trending />

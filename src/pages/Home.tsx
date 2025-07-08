@@ -6,12 +6,18 @@ import VideoCard from '@/components/VideoCard';
 import MobileLocationSearch from '@/components/MobileLocationSearch';
 import VideoSkeletonList from '@/components/VideoSkeletonList';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { LogIn } from 'lucide-react';
 
 const Home = () => {
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { selectedSpotId, updateLocationPreference, loading: locationLoading } = useLocationPreference();
   const [isLocationChanging, setIsLocationChanging] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   const {
     data,
@@ -157,7 +163,19 @@ const Home = () => {
                 {selectedSpotId ? (
                   <p className="text-sm">Try selecting a different location or browse all locations</p>
                 ) : (
-                  <p className="text-sm">Be the first to upload a video!</p>
+                  <div className="space-y-4">
+                    <p className="text-sm">Be the first to upload a video!</p>
+                    {!user && !authLoading && (
+                      <Button
+                        onClick={() => navigate('/login')}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <LogIn className="h-4 w-4" />
+                        Sign in to upload
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -183,6 +201,19 @@ const Home = () => {
                 )}
               </div>
             </>
+          )}
+          
+          {/* Login prompt for unauthenticated users */}
+          {!user && !authLoading && allVideos.length > 0 && (
+            <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50">
+              <Button
+                onClick={() => navigate('/login')}
+                className="flex items-center gap-2 shadow-lg"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign in for full experience
+              </Button>
+            </div>
           )}
         </div>
       )}

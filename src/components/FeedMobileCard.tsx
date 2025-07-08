@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MoreVertical, Heart, MessageCircle, Share, Trash2 } from 'lucide-react';
+import { MoreVertical, Heart, MessageCircle, Share, Trash2, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface Video {
   id: string;
@@ -42,6 +43,7 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
 
@@ -81,6 +83,48 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
   };
 
   const canShowDropdown = user?.id === video.user_id;
+
+  const handleLikeClick = () => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to like videos",
+        action: (
+          <Button
+            size="sm"
+            onClick={() => navigate('/login')}
+            className="flex items-center gap-1"
+          >
+            <LogIn className="h-3 w-3" />
+            Sign in
+          </Button>
+        ),
+      });
+      return;
+    }
+    setIsLiked(!isLiked);
+  };
+
+  const handleCommentClick = () => {
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to comment on videos",
+        action: (
+          <Button
+            size="sm"
+            onClick={() => navigate('/login')}
+            className="flex items-center gap-1"
+          >
+            <LogIn className="h-3 w-3" />
+            Sign in
+          </Button>
+        ),
+      });
+      return;
+    }
+    // TODO: Implement comment functionality
+  };
 
   return (
     <div className="relative w-full h-screen bg-black flex flex-col">
@@ -157,7 +201,7 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
               variant="ghost"
               size="sm"
               className="glass-button text-white h-12 w-12 rounded-full p-0 flex-col"
-              onClick={() => setIsLiked(!isLiked)}
+              onClick={handleLikeClick}
             >
               <Heart className={`h-6 w-6 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
               <span className="text-xs mt-1">{likesCount}</span>
@@ -168,6 +212,7 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
               variant="ghost"
               size="sm"
               className="glass-button text-white h-12 w-12 rounded-full p-0 flex-col"
+              onClick={handleCommentClick}
             >
               <MessageCircle className="h-6 w-6" />
               <span className="text-xs mt-1">0</span>
