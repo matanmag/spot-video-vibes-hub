@@ -31,8 +31,12 @@ const CommentDialog = ({ videoId, commentsCount = 0, children }: CommentDialogPr
   const { comments, isLoading, addComment, isAddingComment } = useComments(videoId);
 
   console.log('CommentDialog - User:', user?.id, 'Comments count:', comments.length);
+  
   const handleAddComment = () => {
+    console.log('handleAddComment called - User:', user?.id, 'Text:', commentText);
+    
     if (!user) {
+      console.log('No user found, showing sign in prompt');
       toast({
         title: "Sign in required",
         description: "Please sign in to comment on videos",
@@ -54,9 +58,11 @@ const CommentDialog = ({ videoId, commentsCount = 0, children }: CommentDialogPr
     }
 
     if (!commentText.trim()) {
+      console.log('Empty comment text');
       return;
     }
 
+    console.log('Calling addComment with:', commentText);
     addComment(commentText);
     setCommentText('');
   };
