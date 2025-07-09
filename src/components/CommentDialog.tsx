@@ -137,7 +137,7 @@ const CommentDialog = ({ videoId, commentsCount = 0, children }: CommentDialogPr
                         {formatDate(comment.created_at)}
                       </span>
                     </div>
-                    <p className="text-sm leading-relaxed">{comment.text}</p>
+                    <p className="text-sm leading-relaxed">{comment.body}</p>
                   </div>
                 ))}
               </div>

@@ -8,7 +8,7 @@ interface Comment {
   id: string;
   video_id: string;
   user_id: string;
-  text: string;
+  body: string;
   created_at: string;
   profiles?: {
     email: string;
@@ -32,12 +32,12 @@ export const useComments = (videoId: string) => {
       const { data, error } = await supabase
         .from('comments')
         .select(`
-          id,
-          video_id,
-          user_id,
-          text,
-          created_at,
-          profiles!inner(email)
+        id,
+        video_id,
+        user_id,
+        body,
+        created_at,
+        profiles!inner(email)
         `)
         .eq('video_id', videoId)
         .order('created_at', { ascending: false });
@@ -60,7 +60,7 @@ export const useComments = (videoId: string) => {
       const { data, error } = await supabase.functions.invoke('add_comment', {
         body: {
           video_id: videoId,
-          text: text.trim()
+          body: text.trim()
         }
       });
 

@@ -16,23 +16,23 @@ export type Database = {
     Tables: {
       comments: {
         Row: {
+          body: string
           created_at: string
           id: string
-          text: string
           user_id: string
           video_id: string
         }
         Insert: {
+          body: string
           created_at?: string
           id?: string
-          text: string
           user_id: string
           video_id: string
         }
         Update: {
+          body?: string
           created_at?: string
           id?: string
-          text?: string
           user_id?: string
           video_id?: string
         }

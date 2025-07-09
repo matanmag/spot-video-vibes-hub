@@ -13,12 +13,12 @@ Deno.serve(async (req) => {
 
   try {
     // Parse the request body
-    const { video_id, text } = await req.json()
+    const { video_id, body } = await req.json()
 
     // Validate input
-    if (!video_id || !text) {
+    if (!video_id || !body) {
       return new Response(
-        JSON.stringify({ error: 'Missing video_id or text' }),
+        JSON.stringify({ error: 'Missing video_id or body' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -26,10 +26,10 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Validate text length
-    if (text.trim().length === 0) {
+    // Validate body length
+    if (body.trim().length === 0) {
       return new Response(
-        JSON.stringify({ error: 'Comment text cannot be empty' }),
+        JSON.stringify({ error: 'Comment body cannot be empty' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -37,9 +37,9 @@ Deno.serve(async (req) => {
       )
     }
 
-    if (text.length > 1000) {
+    if (body.length > 1000) {
       return new Response(
-        JSON.stringify({ error: 'Comment text too long (max 1000 characters)' }),
+        JSON.stringify({ error: 'Comment body too long (max 1000 characters)' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -96,13 +96,13 @@ Deno.serve(async (req) => {
       .insert({
         video_id: video_id,
         user_id: user.id,
-        text: text.trim()
+        body: body.trim()
       })
       .select(`
         id,
         video_id,
         user_id,
-        text,
+        body,
         created_at,
         profiles!inner(email)
       `)
