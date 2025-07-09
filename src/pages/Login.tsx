@@ -19,7 +19,7 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !authLoading) {
-      console.log('User is already logged in, redirecting to home');
+      logger.info('User is already logged in, redirecting to home');
       navigate('/home');
     }
   }, [user, authLoading, navigate]);
@@ -29,11 +29,11 @@ const Login = () => {
     setLoading(true);
 
     try {
-      console.log('Attempting to sign in with email:', email);
+      logger.info('Attempting to sign in with email:', email);
       const { error } = await signInWithEmail(email);
       
       if (error) {
-        console.error('Sign in error:', error);
+        logger.error('Sign in error:', error);
         toast({
           title: "Error",
           description: error.message,
@@ -47,7 +47,7 @@ const Login = () => {
         setEmail('');
       }
     } catch (error: any) {
-      console.error('Unexpected error:', error);
+      logger.error('Unexpected error:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred.",

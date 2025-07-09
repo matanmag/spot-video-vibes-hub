@@ -41,7 +41,7 @@ const LocationSelector = ({ selectedSpotId, onLocationChange }: LocationSelector
           .update({ last_spot_id: spotId })
           .eq('id', user.id);
       } catch (error) {
-        console.error('Error updating user location preference:', error);
+        logger.error('Error updating user location preference:', error);
       }
     }
   };

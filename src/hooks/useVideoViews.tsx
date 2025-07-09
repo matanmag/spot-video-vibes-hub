@@ -31,11 +31,11 @@ export const useVideoViews = (videoId: string) => {
           });
 
         if (updateError) {
-          console.error('Error updating video views count:', updateError);
+          logger.error('Error updating video views count:', updateError);
         }
       }
     } catch (error) {
-      console.error('Error tracking video view:', error);
+      logger.error('Error tracking video view:', error);
     }
   };
 

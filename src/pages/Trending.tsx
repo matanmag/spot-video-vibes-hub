@@ -1,6 +1,11 @@
 import { TrendingUp } from 'lucide-react';
+import { useTrendingVideos } from '@/hooks/useTrendingVideos';
+import VideoCard from '@/components/VideoCard';
+import VideoSkeletonList from '@/components/VideoSkeletonList';
 
 const Trending = () => {
+  const { data, isLoading, error } = useTrendingVideos();
+
   return (
     <div className="min-h-screen bg-background pb-16">
       <div className="container mx-auto px-4 py-8">
@@ -9,16 +14,31 @@ const Trending = () => {
             <TrendingUp className="h-8 w-8 text-turquoise" />
             <h1 className="text-3xl font-bold">Trending</h1>
           </div>
-          
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">
-              Trending videos coming soon...
-            </p>
-          </div>
+
+          {isLoading && <VideoSkeletonList count={3} />}
+
+          {error && (
+            <div className="text-destructive py-16 text-center">
+              Failed to load trending videos
+            </div>
+          )}
+
+          {data && data.length > 0 && (
+            <div className="space-y-6">
+              {data.map((video) => (
+                <VideoCard key={video.id} video={video} />
+              ))}
+            </div>
+          )}
+
+          {data && data.length === 0 && !isLoading && (
+            <div className="text-center py-16 text-muted-foreground">
+              No trending videos found
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
-
 export default Trending;

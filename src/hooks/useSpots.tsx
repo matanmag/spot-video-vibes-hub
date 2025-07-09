@@ -19,13 +19,13 @@ export const useSpots = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching spots:', error);
+        logger.error('Error fetching spots:', error);
         return;
       }
 
       setSpots(data || []);
     } catch (error) {
-      console.error('Error fetching spots:', error);
+      logger.error('Error fetching spots:', error);
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ export const useSpots = () => {
       .single();
 
     if (error) {
-      console.error('Error creating default spot:', error);
+      logger.error('Error creating default spot:', error);
       return null;
     }
 
