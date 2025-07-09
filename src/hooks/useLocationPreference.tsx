@@ -23,7 +23,7 @@ export const useLocationPreference = () => {
             setSelectedSpotId(profile.last_spot_id);
           }
         } catch (error) {
-          console.error('Error loading location preference:', error);
+          logger.error('Error loading location preference:', error);
         }
       }
       setLoading(false);
@@ -43,7 +43,7 @@ export const useLocationPreference = () => {
           .update({ last_spot_id: spotId })
           .eq('id', user.id);
       } catch (error) {
-        console.error('Error updating location preference:', error);
+        logger.error('Error updating location preference:', error);
       }
     }
   };

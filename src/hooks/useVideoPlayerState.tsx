@@ -10,7 +10,7 @@ export const useVideoPlayerState = (videoTitle: string) => {
 
   const updateDebugInfo = useCallback((info: string) => {
     const timestamp = new Date().toISOString().split('T')[1];
-    console.log(`[${timestamp}] VideoPlayer ${videoTitle}: ${info}`);
+    logger.info(`[${timestamp}] VideoPlayer ${videoTitle}: ${info}`);
     setDebugInfo(info);
   }, [videoTitle]);
 

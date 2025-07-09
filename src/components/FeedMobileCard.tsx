@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { MoreVertical, Heart, MessageCircle, Share, Trash2, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +16,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { useComments } from '@/hooks/useComments';
 
 interface Video {
   id: string;
@@ -46,6 +50,9 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const { data: comments = [], addComment } = useComments(video.id);
 
   const useDeleteVideoMutation = () => {
     return useMutation({
@@ -123,7 +130,7 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
       });
       return;
     }
-    // TODO: Implement comment functionality
+    setCommentsOpen(true);
   };
 
   return (
@@ -208,15 +215,57 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
             </Button>
 
             {/* Comment Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="glass-button text-white h-12 w-12 rounded-full p-0 flex-col"
-              onClick={handleCommentClick}
-            >
-              <MessageCircle className="h-6 w-6" />
-              <span className="text-xs mt-1">0</span>
-            </Button>
+            <Dialog open={commentsOpen} onOpenChange={setCommentsOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="glass-button text-white h-12 w-12 rounded-full p-0 flex-col"
+                  onClick={handleCommentClick}
+                >
+                  <MessageCircle className="h-6 w-6" />
+                  <span className="text-xs mt-1">{comments.length}</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Comments</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mb-4">
+                  {comments.map((c) => (
+                    <div key={c.id} className="text-sm">
+                      <p className="font-medium">{c.profiles?.email ?? 'user'}</p>
+                      <p>{c.text}</p>
+                    </div>
+                  ))}
+                </div>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!newComment.trim()) return;
+                    await addComment(newComment.trim());
+                    setNewComment('');
+                  }}
+                >
+                  <Textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Add a comment"
+                    className="mb-2"
+                  />
+                  <DialogFooter>
+                    <Button type="submit" size="sm">
+                      Post
+                    </Button>
+                    <DialogClose asChild>
+                      <Button type="button" variant="ghost" size="sm">
+                        Close
+                      </Button>
+                    </DialogClose>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
 
             {/* Share Button */}
             <Button
@@ -232,5 +281,4 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
     </div>
   );
 };
-
 export default FeedMobileCard;

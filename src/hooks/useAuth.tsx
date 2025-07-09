@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        logger.info('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       // Use dynamic redirect URL based on current environment
       const redirectUrl = `${window.location.origin}/home`;
-      console.log('Signing in with redirect URL:', redirectUrl);
+      logger.info('Signing in with redirect URL:', redirectUrl);
       
       const { error } = await supabase.auth.signInWithOtp({
         email,
@@ -53,12 +53,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       
       if (error) {
-        console.error('Sign in error:', error);
+        logger.error('Sign in error:', error);
       }
       
       return { error };
     } catch (error) {
-      console.error('Unexpected error during sign in:', error);
+      logger.error('Unexpected error during sign in:', error);
       return { error };
     }
   };
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await supabase.auth.signOut();
     } catch (error) {
-      console.error('Sign out error:', error);
+      logger.error('Sign out error:', error);
     }
   };
 

@@ -44,7 +44,7 @@ const LocationSearchDropdown = ({
           placeholder={placeholder}
           value={searchQuery}
           onValueChange={(value) => {
-            console.log('Search input changed:', value);
+            logger.info('Search input changed:', value);
             onSearchChange(value);
           }}
           className="h-9"

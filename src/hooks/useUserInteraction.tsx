@@ -7,7 +7,7 @@ export const useUserInteraction = () => {
   const handleInteraction = useCallback(() => {
     if (!hasUserInteracted) {
       setHasUserInteracted(true);
-      console.log('User interaction detected - enabling autoplay');
+      logger.info('User interaction detected - enabling autoplay');
     }
   }, [hasUserInteracted]);
 
