@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { MoreVertical, Heart, MessageCircle, Share, Trash2, LogIn } from 'lucide-react';
+import CommentDialog from '@/components/CommentDialog';
+import { useComments } from '@/hooks/useComments';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -46,6 +48,7 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+  const { comments } = useComments(video.id);
 
   const useDeleteVideoMutation = () => {
     return useMutation({
@@ -105,26 +108,6 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
     setIsLiked(!isLiked);
   };
 
-  const handleCommentClick = () => {
-    if (!user) {
-      toast({
-        title: "Sign in required",
-        description: "Please sign in to comment on videos",
-        action: (
-          <Button
-            size="sm"
-            onClick={() => navigate('/login')}
-            className="flex items-center gap-1"
-          >
-            <LogIn className="h-3 w-3" />
-            Sign in
-          </Button>
-        ),
-      });
-      return;
-    }
-    // TODO: Implement comment functionality
-  };
 
   return (
     <div className="relative w-full h-screen bg-black flex flex-col">
@@ -208,15 +191,7 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
             </Button>
 
             {/* Comment Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="glass-button text-white h-12 w-12 rounded-full p-0 flex-col"
-              onClick={handleCommentClick}
-            >
-              <MessageCircle className="h-6 w-6" />
-              <span className="text-xs mt-1">0</span>
-            </Button>
+            <CommentDialog videoId={video.id} commentsCount={comments.length} />
 
             {/* Share Button */}
             <Button
