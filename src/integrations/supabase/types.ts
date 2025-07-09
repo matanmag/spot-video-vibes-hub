@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      comments: {
+        Row: {
+          created_at: string
+          id: string
+          text: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          text: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          text?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       likes: {
         Row: {
           created_at: string
@@ -207,6 +246,20 @@ export type Database = {
           total_videos: number
           total_likes: number
           total_views: number
+        }[]
+      }
+      get_trending_videos: {
+        Args: { days_back?: number }
+        Returns: {
+          id: string
+          title: string
+          thumbnail_url: string
+          video_url: string
+          views: number
+          likes_count: number
+          created_at: string
+          spot_name: string
+          user_email: string
         }[]
       }
       get_videos_for_deletion: {
