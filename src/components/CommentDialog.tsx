@@ -30,6 +30,7 @@ const CommentDialog = ({ videoId, commentsCount = 0, children }: CommentDialogPr
   const navigate = useNavigate();
   const { comments, isLoading, addComment, isAddingComment } = useComments(videoId);
 
+  console.log('CommentDialog - User:', user?.id, 'Comments count:', comments.length);
   const handleAddComment = () => {
     if (!user) {
       toast({
