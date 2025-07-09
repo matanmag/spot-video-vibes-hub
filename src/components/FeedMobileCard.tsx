@@ -87,7 +87,7 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
 
   const canShowDropdown = user?.id === video.user_id;
 
-  const handleLikeClick = () => {
+  const handleLikeClick = async () => {
     if (!user) {
       toast({
         title: "Sign in required",
@@ -105,7 +105,37 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
       });
       return;
     }
-    setIsLiked(!isLiked);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('like_video', {
+        body: { video_id: video.id }
+      });
+
+      if (error) {
+        console.error('Error liking video:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update like. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setIsLiked(data.liked);
+      setLikesCount(data.totalLikes);
+      
+      toast({
+        title: data.liked ? "Liked!" : "Unliked",
+        description: data.liked ? "Added to your likes" : "Removed from your likes"
+      });
+    } catch (error) {
+      console.error('Error calling like function:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to update like. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
 
