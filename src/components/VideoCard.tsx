@@ -51,15 +51,11 @@ const VideoCard = ({ video }: VideoCardProps) => {
         <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20">
           <VideoActions videoId={video.id} />
         </div>
-      </div>
-
-      {/* Video Info Overlay - Fixed at bottom with proper spacing */}
-      <div className="absolute bottom-0 left-0 right-0 pb-16 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none">
-        <div className="flex justify-between items-end pointer-events-auto gap-4">
-          <div className="flex-1 min-w-0">
+        {/* Video Info Overlay - Top left, always visible */}
+        <div className="absolute top-0 left-0 w-full p-4 z-20 flex pointer-events-none">
+          <div className="max-w-xl bg-gradient-to-br from-black/80 via-black/60 to-transparent rounded-xl p-4 shadow-lg pointer-events-auto">
             <VideoInfo video={video} />
           </div>
-          {/* Remove VideoActions from here */}
         </div>
       </div>
     </div>

@@ -32,25 +32,26 @@ const VideoInfo = ({ video }: VideoInfoProps) => {
   };
 
   const formatViews = (views: number = 0) => {
+    if (views === 1) return '1 view';
     if (views < 1000) return `${views} views`;
     if (views < 1000000) return `${(views / 1000).toFixed(1)}K views`;
     return `${(views / 1000000).toFixed(1)}M views`;
   };
 
   return (
-    <div className="flex-1 mr-4 text-white">
+    <div className="flex-1 text-white">
       <div className="mb-2">
-        <h3 className="text-lg font-semibold mb-1">{video.title}</h3>
+        <h3 className="text-2xl font-extrabold mb-2 drop-shadow-lg leading-tight">{video.title}</h3>
         {video.description && (
-          <p className="text-sm text-white/80 mb-2">{video.description}</p>
+          <p className="text-base text-white/80 mb-3 leading-snug">{video.description}</p>
         )}
-        <div className="flex items-center gap-2 text-xs text-white/60">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-white/80 font-medium">
           <span>@{video.profiles?.email?.split('@')[0] || 'user'}</span>
           <span>•</span>
           <span>{formatTimeAgo(video.created_at)}</span>
           <span>•</span>
           <span>{formatViews(video.views)}</span>
-          {video.spots && (
+          {video.spots && video.spots.name && video.spots.name !== 'Default Spot' && (
             <>
               <span>•</span>
               <span>{video.spots.name}</span>
