@@ -47,6 +47,10 @@ const VideoCard = ({ video }: VideoCardProps) => {
       {/* Video Player Container */}
       <div className="flex-1 relative overflow-hidden">
         <VideoPlayer video={video} containerRef={containerRef} />
+        {/* Vertically centered right-side actions */}
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 z-20">
+          <VideoActions videoId={video.id} />
+        </div>
       </div>
 
       {/* Video Info Overlay - Fixed at bottom with proper spacing */}
@@ -55,9 +59,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
           <div className="flex-1 min-w-0">
             <VideoInfo video={video} />
           </div>
-          <div className="flex-shrink-0">
-            <VideoActions videoId={video.id} />
-          </div>
+          {/* Remove VideoActions from here */}
         </div>
       </div>
     </div>
