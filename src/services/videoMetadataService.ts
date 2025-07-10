@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface VideoMetadata {
   title: string;
@@ -12,7 +13,7 @@ interface VideoMetadata {
 }
 
 export const saveVideoMetadata = async (metadata: VideoMetadata) => {
-  console.log('Saving video metadata:', metadata);
+  logger.info('Saving video metadata:', metadata);
   
   const { data: videoData, error: dbError } = await supabase
     .from('videos')
@@ -34,7 +35,7 @@ export const saveVideoMetadata = async (metadata: VideoMetadata) => {
     throw new Error(`Failed to save video metadata: ${dbError.message}`);
   }
 
-  console.log('Video metadata saved successfully:', videoData);
+  logger.info('Video metadata saved successfully:', videoData);
   return videoData;
 };
 

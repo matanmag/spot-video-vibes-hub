@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import VideoPlayer from '@/components/VideoPlayer';
 import VideoInfo from '@/components/VideoInfo';
 import VideoActions from '@/components/VideoActions';
+import { logger } from '@/utils/logger';
 
 interface Video {
   id: string;
@@ -31,7 +32,7 @@ interface VideoCardProps {
 const VideoCard = ({ video }: VideoCardProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  console.log('Rendering VideoCard for:', video.title, {
+  logger.info('Rendering VideoCard for:', video.title, {
     video_url: video.video_url,
     optimized_url: video.optimized_url,
     thumbnail_url: video.thumbnail_url

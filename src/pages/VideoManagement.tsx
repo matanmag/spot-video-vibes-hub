@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -57,7 +58,7 @@ const VideoManagement = () => {
   // Delete video mutation (admin)
   const deleteVideoMutation = useMutation({
     mutationFn: async (videoId: string) => {
-      console.log('Admin deleting video:', videoId);
+      logger.info('Admin deleting video:', videoId);
       
       const { data, error } = await supabase.functions.invoke('delete_video_admin', {
         body: { id: videoId },
@@ -78,7 +79,7 @@ const VideoManagement = () => {
       queryClient.invalidateQueries({ queryKey: ['videos-for-deletion'] });
     },
     onError: (error: any) => {
-      console.error('Deletion error:', error);
+      logger.error('Deletion error:', error);
       toast({
         title: "Error deleting video",
         description: error.message || "Failed to delete video",
@@ -96,7 +97,7 @@ const VideoManagement = () => {
           const result = await deleteVideoMutation.mutateAsync(videoId);
           results.push(result);
         } catch (error) {
-          console.error(`Failed to delete video ${videoId}:`, error);
+          logger.error(`Failed to delete video ${videoId}:`, error);
         }
       }
       return results;

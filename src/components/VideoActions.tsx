@@ -3,6 +3,7 @@ import { Heart, MessageCircle, Share } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
+import { logger } from '@/utils/logger';
 
 interface VideoActionsProps {
   videoId: string;
@@ -40,7 +41,7 @@ const VideoActions = ({ videoId }: VideoActionsProps) => {
 
         setLikeCount(count || 0);
       } catch (error) {
-        console.error('Error fetching like data:', error);
+        logger.error('Error fetching like data:', error);
       }
     };
 
@@ -58,7 +59,7 @@ const VideoActions = ({ videoId }: VideoActionsProps) => {
       });
 
       if (error) {
-        console.error('Error liking video:', error);
+        logger.error('Error liking video:', error);
         toast({
           title: "Error",
           description: "Failed to update like. Please try again.",
@@ -76,7 +77,7 @@ const VideoActions = ({ videoId }: VideoActionsProps) => {
         description: data.liked ? "Added to your likes" : "Removed from your likes"
       });
     } catch (error) {
-      console.error('Error calling like function:', error);
+      logger.error('Error calling like function:', error);
       toast({
         title: "Error",
         description: "Failed to update like. Please try again.",

@@ -1,5 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/utils/logger';
 
 export const useUserInteraction = () => {
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
@@ -7,7 +8,7 @@ export const useUserInteraction = () => {
   const handleInteraction = useCallback(() => {
     if (!hasUserInteracted) {
       setHasUserInteracted(true);
-      console.log('User interaction detected - enabling autoplay');
+      logger.info('User interaction detected - enabling autoplay');
     }
   }, [hasUserInteracted]);
 

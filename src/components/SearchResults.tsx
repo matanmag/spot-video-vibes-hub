@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 import VideoCard from '@/components/VideoCard';
 import LocationSearch from '@/components/LocationSearch';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
@@ -29,7 +30,7 @@ const SearchResults = ({ query }: SearchResultsProps) => {
   } = useInfiniteQuery({
     queryKey: ['search-videos', query, localSpotId],
     queryFn: async ({ pageParam }) => {
-      console.log('Searching videos with query:', query, 'spotId:', localSpotId, 'pageParam:', pageParam);
+      logger.info('Searching videos with query:', query, 'spotId:', localSpotId, 'pageParam:', pageParam);
       
       let queryBuilder = supabase
         .from('videos')
@@ -64,7 +65,7 @@ const SearchResults = ({ query }: SearchResultsProps) => {
       const { data, error } = await queryBuilder;
 
       if (error) {
-        console.error('Error searching videos:', error);
+        logger.error('Error searching videos:', error);
         throw error;
       }
 

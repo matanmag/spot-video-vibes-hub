@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -30,21 +31,21 @@ export function SurfSpots() {
 
     const fetchSurfSpots = async () => {
         try {
-            console.log('Fetching surf spots...');
+            logger.info('Fetching surf spots...');
             const { data, error } = await supabase
                 .from('spots')
                 .select('*')
                 .order('name');
 
             if (error) {
-                console.error('Supabase error:', error);
+                logger.error('Supabase error:', error);
                 throw error;
             }
             
-            console.log('Fetched spots:', data);
+            logger.info('Fetched spots:', data);
             setSpots(data || []);
         } catch (err) {
-            console.error('Error fetching spots:', err);
+            logger.error('Error fetching spots:', err);
             setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setLoading(false);

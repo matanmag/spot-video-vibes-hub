@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 import VideoCard from '@/components/VideoCard';
 import MobileLocationSearch from '@/components/MobileLocationSearch';
 import VideoSkeletonList from '@/components/VideoSkeletonList';
@@ -30,7 +31,7 @@ const Home = () => {
   } = useInfiniteQuery({
     queryKey: ['videos', selectedSpotId],
     queryFn: async ({ pageParam }) => {
-      console.log('Fetching videos with pageParam:', pageParam, 'spotId:', selectedSpotId);
+      logger.info('Fetching videos with pageParam:', pageParam, 'spotId:', selectedSpotId);
       
       let query = supabase
         .from('videos')
@@ -60,11 +61,11 @@ const Home = () => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching videos:', error);
+        logger.error('Error fetching videos:', error);
         throw error;
       }
 
-      console.log('Fetched videos:', data);
+      logger.info('Fetched videos:', data);
       return data || [];
     },
     getNextPageParam: (lastPage) => {
@@ -118,7 +119,7 @@ const Home = () => {
   const isInitialLoading = isLoading || locationLoading;
   const showSkeletons = isInitialLoading || isLocationChanging;
 
-  console.log('Current state:', { 
+  logger.info('Current state:', { 
     isInitialLoading, 
     isLocationChanging,
     locationLoading, 
@@ -128,7 +129,7 @@ const Home = () => {
   });
 
   if (error) {
-    console.error('Home page error:', error);
+    logger.error('Home page error:', error);
     return (
       <div className="h-screen flex flex-col bg-background">
         <MobileLocationSearch

@@ -7,6 +7,7 @@ import { useSpots } from './useSpots';
 import { useNavigate } from 'react-router-dom';
 import { validateVideoFile, generateTitleFromFilename } from '@/utils/videoValidation';
 import { MAX_FILE_SIZE } from '@/constants/videoFormats';
+import { logger } from '@/utils/logger';
 
 export const useUploadForm = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -26,7 +27,7 @@ export const useUploadForm = () => {
   useEffect(() => {
     const initializeDefaultSpot = async () => {
       if (user) {
-        console.log('Creating default spot for uploads');
+        logger.info('Creating default spot for uploads');
         await createDefaultSpot();
       }
     };
@@ -78,9 +79,9 @@ export const useUploadForm = () => {
     try {
       // Simulate FFmpeg.wasm initialization
       await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('FFmpeg encoder ready');
+      logger.info('FFmpeg encoder ready');
     } catch (error) {
-      console.error('Failed to initialize encoder:', error);
+      logger.error('Failed to initialize encoder:', error);
       toast({
         title: "Encoder initialization failed",
         description: "Please try again.",
@@ -129,7 +130,7 @@ export const useUploadForm = () => {
       return;
     }
 
-    console.log('Starting video upload process');
+    logger.info('Starting video upload process');
     const result = await uploadVideo(
       file, 
       title.trim(), 
