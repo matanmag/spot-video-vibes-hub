@@ -1,16 +1,24 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import FeedItem from '@/components/FeedItem';
+import { logger } from '@/utils/logger';
+import VideoCard from '@/components/VideoCard';
 import MobileLocationSearch from '@/components/MobileLocationSearch';
 import VideoSkeletonList from '@/components/VideoSkeletonList';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { LogIn } from 'lucide-react';
 
 const Home = () => {
   const observerRef = useRef<IntersectionObserver>();
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { selectedSpotId, updateLocationPreference, loading: locationLoading } = useLocationPreference();
   const [isLocationChanging, setIsLocationChanging] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   const {
     data,
@@ -23,7 +31,7 @@ const Home = () => {
   } = useInfiniteQuery({
     queryKey: ['videos', selectedSpotId],
     queryFn: async ({ pageParam }) => {
-      console.log('Fetching videos with pageParam:', pageParam, 'spotId:', selectedSpotId);
+      logger.info('Fetching videos with pageParam:', pageParam, 'spotId:', selectedSpotId);
       
       let query = supabase
         .from('videos')
@@ -34,7 +42,7 @@ const Home = () => {
             latitude,
             longitude
           ),
-          profiles (
+          profiles!videos_user_id_fkey (
             email
           )
         `)
@@ -53,11 +61,11 @@ const Home = () => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching videos:', error);
+        logger.error('Error fetching videos:', error);
         throw error;
       }
 
-      console.log('Fetched videos:', data);
+      logger.info('Fetched videos:', data);
       return data || [];
     },
     getNextPageParam: (lastPage) => {
@@ -111,7 +119,7 @@ const Home = () => {
   const isInitialLoading = isLoading || locationLoading;
   const showSkeletons = isInitialLoading || isLocationChanging;
 
-  console.log('Current state:', { 
+  logger.info('Current state:', { 
     isInitialLoading, 
     isLocationChanging,
     locationLoading, 
@@ -121,7 +129,7 @@ const Home = () => {
   });
 
   if (error) {
-    console.error('Home page error:', error);
+    logger.error('Home page error:', error);
     return (
       <div className="h-screen flex flex-col bg-background">
         <MobileLocationSearch
@@ -156,31 +164,36 @@ const Home = () => {
                 {selectedSpotId ? (
                   <p className="text-sm">Try selecting a different location or browse all locations</p>
                 ) : (
-                  <p className="text-sm">Be the first to upload a video!</p>
+                  <div className="space-y-4">
+                    <p className="text-sm">Be the first to upload a video!</p>
+                    {!user && !authLoading && (
+                      <Button
+                        onClick={() => navigate('/login')}
+                        variant="outline"
+                        className="flex items-center gap-2"
+                      >
+                        <LogIn className="h-4 w-4" />
+                        Sign in to upload
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
           ) : (
             <>
-              {allVideos.map((video, index) => {
-                return (
-                  <div 
-                    key={`${video.id}-${index}`} 
-                    className="snap-item animate-fade-in"
-                    style={{ 
-                      animationDelay: `${index * 100}ms`,
-                      animationFillMode: 'both'
-                    }}
-                  >
-                    <FeedItem
-                      video={video}
-                      comments={0}
-                      bookmarks={0}
-                      shares={0}
-                    />
-                  </div>
-                );
-              })}
+              {allVideos.map((video, index) => (
+                <div 
+                  key={`${video.id}-${index}`} 
+                  className="snap-item animate-fade-in"
+                  style={{ 
+                    animationDelay: `${index * 100}ms`,
+                    animationFillMode: 'both'
+                  }}
+                >
+                  <VideoCard video={video} />
+                </div>
+              ))}
               
               {/* Load more trigger */}
               <div ref={loadMoreRef} className="snap-item flex items-center justify-center">
@@ -189,6 +202,19 @@ const Home = () => {
                 )}
               </div>
             </>
+          )}
+          
+          {/* Login prompt for unauthenticated users */}
+          {!user && !authLoading && allVideos.length > 0 && (
+            <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50">
+              <Button
+                onClick={() => navigate('/login')}
+                className="flex items-center gap-2 shadow-lg"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign in for full experience
+              </Button>
+            </div>
           )}
         </div>
       )}

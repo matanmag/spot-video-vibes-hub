@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { logger } from '@/utils/logger';
 import { generateVideoPreview } from '@/utils/videoPreviewGenerator';
 import { uploadVideoFiles } from '@/utils/videoFileUploader';
 import { saveVideoMetadata, updateUserLocationPreference } from '@/services/videoMetadataService';
@@ -26,7 +27,7 @@ export const useVideoUpload = () => {
     setProgress(0);
 
     try {
-      console.log('Starting video upload process:', title);
+      logger.info('Starting video upload process:', title);
 
       // Generate preview and thumbnail
       setProgress(10);
@@ -73,7 +74,7 @@ export const useVideoUpload = () => {
       return videoData;
 
     } catch (error: any) {
-      console.error('Error uploading video:', error);
+      logger.error('Error uploading video:', error);
       toast({
         title: "Upload failed",
         description: error.message || "Failed to upload video. Please try again.",

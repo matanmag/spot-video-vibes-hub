@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { logger } from '@/utils/logger';
 
 export const useVideoViews = (videoId: string) => {
   const [hasTrackedView, setHasTrackedView] = useState(false);
@@ -31,11 +32,11 @@ export const useVideoViews = (videoId: string) => {
           });
 
         if (updateError) {
-          console.error('Error updating video views count:', updateError);
+          logger.error('Error updating video views count:', updateError);
         }
       }
     } catch (error) {
-      console.error('Error tracking video view:', error);
+      logger.error('Error tracking video view:', error);
     }
   };
 

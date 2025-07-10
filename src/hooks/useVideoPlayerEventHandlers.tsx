@@ -1,5 +1,6 @@
 
 import { useCallback } from 'react';
+import { logger } from '@/utils/logger';
 
 interface UseVideoPlayerEventHandlersProps {
   updateDebugInfo: (info: string) => void;
@@ -45,7 +46,7 @@ export const useVideoPlayerEventHandlers = ({
   const handleError = useCallback((e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
     const error = e.currentTarget.error;
     const errorMessage = error ? `Code ${error.code}: ${error.message}` : 'Unknown error';
-    console.error('Video error:', error);
+    logger.error('Video error:', error);
     updateDebugInfo(`Error: ${errorMessage}`);
     setHasError(true);
     setIsReady(false);

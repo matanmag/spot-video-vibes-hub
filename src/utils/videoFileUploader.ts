@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface UploadResult {
   originalUrl: string;
@@ -22,7 +23,7 @@ export const uploadVideoFiles = async (
   const previewFileName = `previews/${baseFileName}.mp4`;
   const thumbnailFileName = `thumbnails/${baseFileName}.jpg`;
 
-  console.log('Uploading files:', { originalFileName, previewFileName, thumbnailFileName });
+  logger.info('Uploading files:', { originalFileName, previewFileName, thumbnailFileName });
 
   try {
     // Upload original video

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 
 interface Spot {
   id: string;
@@ -34,7 +35,7 @@ export const useLocationSearch = (selectedSpotId?: string | null) => {
             setSelectedSpotName(spot.name);
           }
         } catch (error) {
-          console.error('Error loading selected spot:', error);
+          logger.error('Error loading selected spot:', error);
         }
       } else {
         setSelectedSpotName('');
@@ -54,20 +55,20 @@ export const useLocationSearch = (selectedSpotId?: string | null) => {
 
       setLoading(true);
       try {
-        console.log('Searching for:', searchQuery);
+        logger.info('Searching for:', searchQuery);
         const { data, error } = await supabase.rpc('search_spots', {
           q: searchQuery.trim()
         });
 
         if (error) {
-          console.error('Search error:', error);
+          logger.error('Search error:', error);
           setSearchResults([]);
         } else {
-          console.log('Search results:', data);
+          logger.info('Search results:', data);
           setSearchResults(data || []);
         }
       } catch (error) {
-        console.error('Search error:', error);
+        logger.error('Search error:', error);
         setSearchResults([]);
       } finally {
         setLoading(false);
@@ -91,7 +92,7 @@ export const useLocationSearch = (selectedSpotId?: string | null) => {
             .update({ last_spot_id: spot.id })
             .eq('id', user.id);
         } catch (error) {
-          console.error('Error updating location preference:', error);
+          logger.error('Error updating location preference:', error);
         }
       }
     } else {

@@ -1,5 +1,6 @@
 
 import { useCallback } from 'react';
+import { logger } from '@/utils/logger';
 
 interface Video {
   id: string;
@@ -12,7 +13,7 @@ interface Video {
 export const useVideoUrl = (video: Video) => {
   const getOptimizedVideoUrl = useCallback(() => {
     const url = video.optimized_url || video.video_url;
-    console.log(`Using video URL: ${url} for ${video.title}`);
+    logger.info(`Using video URL: ${url} for ${video.title}`);
     return url;
   }, [video.optimized_url, video.video_url, video.title]);
 
