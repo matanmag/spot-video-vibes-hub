@@ -76,22 +76,20 @@ const MobileLocationSearch = ({
 
   return (
     <>
-      <div className="w-full bg-black/60 backdrop-blur-sm border-none sticky top-0 z-50">
-        <div className="px-4 py-3">
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
-              <Search className="h-5 w-5 text-white/70" />
-            </div>
-            
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Search city or place"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onFocus={handleFocus}
-              className="w-full h-12 pl-12 pr-12 rounded-full bg-black/60 border-none text-white placeholder:text-white/70 shadow-lg focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-200 relative z-10"
-            />
+      <div className="w-full bg-gradient-to-br from-black/70 via-black/40 to-transparent rounded-xl p-4 shadow-lg sticky top-0 z-50">
+        <div className="relative">
+          <div className="absolute left-7 top-1/2 transform -translate-y-1/2 z-10">
+            <Search className="h-5 w-5 text-white/70" />
+          </div>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Search city or place"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            onFocus={handleFocus}
+            className="w-full h-12 pl-10 pr-12 rounded-full bg-transparent text-white placeholder:text-white/70 border-none shadow-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-200 relative z-10"
+          />
             
             {(searchValue || selectedSpotName) && (
               <button
@@ -109,7 +107,6 @@ const MobileLocationSearch = ({
             )}
           </div>
         </div>
-      </div>
 
       <MobileLocationOverlay
         isOpen={isOverlayOpen}
