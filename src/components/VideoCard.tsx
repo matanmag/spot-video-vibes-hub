@@ -53,7 +53,7 @@ const VideoCard = ({ video }: VideoCardProps) => {
         </div>
         {/* Video Info Overlay - Top left, always visible */}
         <div className="absolute top-0 left-0 w-full p-4 z-20 flex pointer-events-none">
-          <div className="max-w-xl bg-gradient-to-br from-black/80 via-black/60 to-transparent rounded-xl p-4 shadow-lg pointer-events-auto">
+          <div className="max-w-xl bg-gradient-to-br from-black/70 via-black/40 to-transparent rounded-xl p-4 shadow-lg pointer-events-auto">
             <VideoInfo video={video} />
           </div>
         </div>

@@ -150,7 +150,7 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
       </div>
 
       {/* Content Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 via-black/40 to-transparent">
         <div className="flex justify-between items-end">
           {/* Left Side - Video Info */}
           <div className="flex-1 pr-4">

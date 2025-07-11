@@ -50,7 +50,7 @@ const Search = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="pl-10 bg-background/80 backdrop-blur-sm border-border/50"
+                className="pl-10 bg-black/60 backdrop-blur-sm border-none text-white placeholder:text-white/70 shadow-lg focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-200"
               />
             </div>
           </div>
