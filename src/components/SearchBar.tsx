@@ -18,16 +18,18 @@ const SearchBar = () => {
 
   return (
     <div className="absolute top-4 left-4 right-4 z-50">
-      {/* Video Search */}
-      <div className="relative max-w-md mx-auto bg-gradient-to-br from-black/70 via-black/40 to-transparent rounded-xl p-4 shadow-lg">
-        <Search className="absolute left-7 top-1/2 transform -translate-y-1/2 text-white/70 h-4 w-4" />
+      <div className="relative max-w-md mx-auto">
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/40 to-transparent rounded-xl pointer-events-none" />
+        {/* Input and icon */}
+        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/70 h-4 w-4 z-10" />
         <Input
           type="text"
           placeholder="Search videos..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyPress={handleSearchKeyPress}
-          className="pl-10 bg-transparent text-white placeholder:text-white/70 border-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-200"
+          className="pl-12 bg-transparent text-white placeholder:text-white/70 border-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-200 relative z-10"
         />
       </div>
     </div>
