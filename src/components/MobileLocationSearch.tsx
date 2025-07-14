@@ -90,7 +90,7 @@ const MobileLocationSearch = ({
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onFocus={handleFocus}
-              className="w-full h-12 pl-12 pr-12 rounded-full bg-black/60 border-none text-white placeholder:text-white/70 shadow-lg focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-200 relative z-10"
+              className="w-full h-12 pl-12 pr-12 rounded-xl bg-black/60 text-white placeholder:text-white/70 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all duration-200 relative z-10 shadow-lg"
             />
             
             {(searchValue || selectedSpotName) && (
