@@ -112,7 +112,6 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
       });
 
       if (error) {
-        console.error('Error liking video:', error);
         toast({
           title: "Error",
           description: "Failed to update like. Please try again.",
@@ -129,7 +128,6 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
         description: data.liked ? "Added to your likes" : "Removed from your likes"
       });
     } catch (error) {
-      console.error('Error calling like function:', error);
       toast({
         title: "Error", 
         description: "Failed to update like. Please try again.",

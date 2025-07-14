@@ -35,7 +35,7 @@ export const uploadVideoFiles = async (
       });
 
     if (originalError) {
-      console.error('Original video upload error:', originalError);
+      logger.error('Original video upload error:', originalError);
       throw new Error(`Failed to upload video: ${originalError.message}`);
     }
 
@@ -48,7 +48,7 @@ export const uploadVideoFiles = async (
       });
 
     if (previewError) {
-      console.error('Preview video upload error:', previewError);
+      logger.error('Preview video upload error:', previewError);
       throw new Error(`Failed to upload preview: ${previewError.message}`);
     }
 
@@ -61,7 +61,7 @@ export const uploadVideoFiles = async (
       });
 
     if (thumbnailError) {
-      console.error('Thumbnail upload error:', thumbnailError);
+      logger.error('Thumbnail upload error:', thumbnailError);
       throw new Error(`Failed to upload thumbnail: ${thumbnailError.message}`);
     }
 
@@ -78,31 +78,20 @@ export const uploadVideoFiles = async (
       .from('thumbnails-public')
       .getPublicUrl(thumbnailFileName);
 
-    console.log('Generated URLs:', { originalUrl, optimizedUrl, thumbnailUrl });
+    logger.info('Generated URLs:', { originalUrl, optimizedUrl, thumbnailUrl });
 
-    // Verify URLs are accessible with detailed logging
+    // Verify URLs are accessible
     try {
-      console.log('Testing original URL accessibility...');
-      const originalTest = await fetch(originalUrl, { method: 'HEAD' });
-      console.log(`Original URL test: ${originalTest.status} ${originalTest.statusText}`);
-      console.log('Original URL headers:', Object.fromEntries(originalTest.headers.entries()));
-
-      console.log('Testing optimized URL accessibility...');
-      const optimizedTest = await fetch(optimizedUrl, { method: 'HEAD' });
-      console.log(`Optimized URL test: ${optimizedTest.status} ${optimizedTest.statusText}`);
-      console.log('Optimized URL headers:', Object.fromEntries(optimizedTest.headers.entries()));
-
-      console.log('Testing thumbnail URL accessibility...');
-      const thumbnailTest = await fetch(thumbnailUrl, { method: 'HEAD' });
-      console.log(`Thumbnail URL test: ${thumbnailTest.status} ${thumbnailTest.statusText}`);
-      console.log('Thumbnail URL headers:', Object.fromEntries(thumbnailTest.headers.entries()));
+      await fetch(originalUrl, { method: 'HEAD' });
+      await fetch(optimizedUrl, { method: 'HEAD' });
+      await fetch(thumbnailUrl, { method: 'HEAD' });
     } catch (error) {
-      console.error('Error testing URLs:', error);
+      logger.error('Error testing URLs:', error);
     }
 
     return { originalUrl, optimizedUrl, thumbnailUrl };
   } catch (error) {
-    console.error('Upload failed:', error);
+    logger.error('Upload failed:', error);
     throw error;
   }
 };

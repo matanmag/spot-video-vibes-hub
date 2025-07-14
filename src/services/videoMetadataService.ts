@@ -31,7 +31,7 @@ export const saveVideoMetadata = async (metadata: VideoMetadata) => {
     .single();
 
   if (dbError) {
-    console.error('Database error:', dbError);
+    logger.error('Database error:', dbError);
     throw new Error(`Failed to save video metadata: ${dbError.message}`);
   }
 
@@ -47,10 +47,10 @@ export const updateUserLocationPreference = async (userId: string, spotId: strin
       .eq('id', userId);
       
     if (error) {
-      console.error('Error updating user location preference:', error);
+      logger.error('Error updating user location preference:', error);
     }
   } catch (error) {
-    console.error('Error updating user location preference:', error);
+    logger.error('Error updating user location preference:', error);
     // Don't throw here as the video upload was successful
   }
 };

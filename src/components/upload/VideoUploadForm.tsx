@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UploadIcon } from 'lucide-react';
 import { FileDropzone } from './FileDropzone';

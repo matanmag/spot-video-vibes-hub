@@ -51,8 +51,6 @@ export const useComments = (videoId: string) => {
   // Add comment mutation
   const addCommentMutation = useMutation({
     mutationFn: async (text: string) => {
-      console.log('Adding comment - User:', user?.id, 'VideoId:', videoId, 'Text:', text);
-      
       if (!user) {
         throw new Error('User must be authenticated to add comments');
       }
@@ -64,7 +62,6 @@ export const useComments = (videoId: string) => {
         }
       });
 
-      console.log('Comment response:', { data, error });
       if (error) throw error;
       return data;
     },
