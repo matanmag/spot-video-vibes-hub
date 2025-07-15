@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
-import VideoCard from '@/components/VideoCard';
+import VideoCard from '@/components/OptimizedVideoCard';
 import MobileLocationSearch from '@/components/MobileLocationSearch';
 import VideoSkeletonList from '@/components/VideoSkeletonList';
 import { useLocationPreference } from '@/hooks/useLocationPreference';
@@ -47,7 +47,7 @@ const Home = () => {
           )
         `)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(8); // Reduced from 10 to 8 for better performance
 
       // Filter by location if selected
       if (selectedSpotId) {
@@ -69,10 +69,12 @@ const Home = () => {
       return data || [];
     },
     getNextPageParam: (lastPage) => {
-      if (lastPage.length < 10) return undefined;
+      if (lastPage.length < 8) return undefined; // Updated to match new limit
       return lastPage[lastPage.length - 1]?.created_at;
     },
     initialPageParam: undefined,
+    staleTime: 2 * 60 * 1000, // 2 minutes for video feed
+    refetchOnWindowFocus: false,
   });
 
   // Handle location preference updates with loading state
@@ -91,7 +93,7 @@ const Home = () => {
     refetch();
   }, [selectedSpotId, refetch]);
 
-  // Set up intersection observer for infinite scroll
+  // Optimized intersection observer for infinite scroll
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect();
 
@@ -101,7 +103,10 @@ const Home = () => {
           fetchNextPage();
         }
       },
-      { threshold: 0.1 }
+      { 
+        threshold: 0.1,
+        rootMargin: '100px' // Preload earlier for smoother experience
+      }
     );
 
     if (loadMoreRef.current) {

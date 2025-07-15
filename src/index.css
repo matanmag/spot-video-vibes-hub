@@ -97,13 +97,16 @@
     display: none;
   }
   
-  /* TikTok-style snap scrolling */
+  /* Optimized TikTok-style snap scrolling */
   .snap-container {
     scroll-snap-type: y mandatory;
     scroll-behavior: smooth;
     overflow-y: auto;
     height: 100vh;
     -webkit-overflow-scrolling: touch;
+    /* Improve scrolling performance */
+    will-change: scroll-position;
+    transform: translateZ(0);
   }
   
   .snap-item {
@@ -111,5 +114,29 @@
     scroll-snap-stop: always;
     height: 100vh;
     width: 100%;
+    /* Optimize rendering */
+    contain: layout style paint;
+  }
+  
+  /* Performance optimizations */
+  .video-container {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+  
+  /* Smooth animations */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
