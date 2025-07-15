@@ -4,6 +4,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 import VideoInfo from '@/components/VideoInfo';
 import VideoActions from '@/components/VideoActions';
 import { logger } from '@/utils/logger';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface Video {
   id: string;
@@ -53,7 +54,15 @@ const VideoCard = ({ video }: VideoCardProps) => {
         </div>
         {/* Video Info Overlay - Top left, always visible */}
         <div className="absolute top-0 left-0 w-full p-4 z-20 flex pointer-events-none">
-          <div className="max-w-xl bg-black/60 rounded-xl p-4 shadow-lg pointer-events-auto">
+          <div className="max-w-xl bg-black/40 backdrop-blur-md rounded-2xl p-5 shadow-2xl pointer-events-auto border border-white/10 transition-all duration-300">
+            <div className="flex items-center gap-4 mb-3">
+              <Avatar>
+                <AvatarFallback>
+                  {video.profiles?.email ? video.profiles.email[0].toUpperCase() : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-white/80 font-semibold text-base drop-shadow-sm">@{video.profiles?.email?.split('@')[0] || 'user'}</span>
+            </div>
             <VideoInfo video={video} />
           </div>
         </div>

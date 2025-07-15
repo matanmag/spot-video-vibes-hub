@@ -15,6 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface Video {
   id: string;
@@ -148,32 +149,31 @@ const FeedMobileCard = ({ video }: FeedMobileCardProps) => {
       </div>
 
       {/* Content Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 via-black/40 to-transparent">
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-black/30 backdrop-blur-md rounded-t-2xl shadow-2xl border-t border-white/10 transition-all duration-300">
         <div className="flex justify-between items-end">
           {/* Left Side - Video Info */}
           <div className="flex-1 pr-4">
-            <div className="mb-2">
-              <p className="text-white text-sm opacity-75">
-                @{video.profiles?.email?.split('@')[0] || 'user'}
-              </p>
+            <div className="flex items-center gap-3 mb-2">
+              <Avatar>
+                <AvatarFallback>
+                  {video.profiles?.email ? video.profiles.email[0].toUpperCase() : 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <p className="text-white text-sm opacity-75 font-semibold">@{video.profiles?.email?.split('@')[0] || 'user'}</p>
             </div>
-            
             <h3 className="text-white text-lg font-semibold mb-2 line-clamp-2">
               {video.title}
             </h3>
-            
             {video.description && (
               <p className="text-white text-sm opacity-90 line-clamp-2 mb-2">
                 {video.description}
               </p>
             )}
-            
             {video.spots && (
               <p className="text-turquoise text-sm mb-2">
                 📍 {video.spots.name}
               </p>
             )}
-            
             <div className="flex items-center gap-4 text-white text-sm">
               <span>{video.views || 0} views</span>
               <span>{video.created_at ? new Date(video.created_at).toLocaleDateString() : ''}</span>

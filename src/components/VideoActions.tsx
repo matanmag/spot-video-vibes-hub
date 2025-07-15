@@ -99,20 +99,30 @@ const VideoActions = ({ videoId }: VideoActionsProps) => {
       <button 
         onClick={handleLike}
         disabled={isLikeLoading}
-        className="flex flex-col items-center text-white hover:text-red-500 transition-colors disabled:opacity-50"
+        className="flex flex-col items-center text-white hover:text-red-500 transition-colors duration-200 disabled:opacity-50 active:scale-90 focus:scale-95 focus:outline-none group"
       >
-        <Heart 
-          className={`h-8 w-8 mb-1 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} 
-        />
-        <span className="text-xs">{formatLikeCount(likeCount)}</span>
+        <span className="relative flex items-center justify-center">
+          <Heart 
+            className={`h-8 w-8 mb-1 transition-all duration-200 group-hover:scale-110 group-active:scale-95 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} 
+          />
+          {/* Ripple effect */}
+          <span className="absolute inset-0 rounded-full pointer-events-none group-active:animate-ping bg-red-500/20" />
+        </span>
+        <span className="text-xs transition-all duration-200 group-hover:font-bold">{formatLikeCount(likeCount)}</span>
       </button>
-      <button className="flex flex-col items-center text-white hover:text-blue-500 transition-colors">
-        <MessageCircle className="h-8 w-8 mb-1" />
-        <span className="text-xs">Comment</span>
+      <button className="flex flex-col items-center text-white hover:text-blue-500 transition-colors duration-200 active:scale-90 focus:scale-95 focus:outline-none group">
+        <span className="relative flex items-center justify-center">
+          <MessageCircle className="h-8 w-8 mb-1 transition-all duration-200 group-hover:scale-110 group-active:scale-95" />
+          <span className="absolute inset-0 rounded-full pointer-events-none group-active:animate-ping bg-blue-500/20" />
+        </span>
+        <span className="text-xs transition-all duration-200 group-hover:font-bold">Comment</span>
       </button>
-      <button className="flex flex-col items-center text-white hover:text-green-500 transition-colors">
-        <Share className="h-8 w-8 mb-1" />
-        <span className="text-xs">Share</span>
+      <button className="flex flex-col items-center text-white hover:text-green-500 transition-colors duration-200 active:scale-90 focus:scale-95 focus:outline-none group">
+        <span className="relative flex items-center justify-center">
+          <Share className="h-8 w-8 mb-1 transition-all duration-200 group-hover:scale-110 group-active:scale-95" />
+          <span className="absolute inset-0 rounded-full pointer-events-none group-active:animate-ping bg-green-500/20" />
+        </span>
+        <span className="text-xs transition-all duration-200 group-hover:font-bold">Share</span>
       </button>
     </div>
   );
